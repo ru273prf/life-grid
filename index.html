@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<meta name="life-grid-version" content="43">
+<meta name="life-grid-version" content="44">
 <meta name="color-scheme" content="light">
 <title>LIFE GRID</title>
 <style>
@@ -478,6 +478,80 @@ button,a{-webkit-user-select:none;user-select:none;}
 
 
 
+/* v44 EVERY habit tracker */
+#everyView.view.active{display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:7px;}
+.every-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto;}
+.every-page-switch{display:flex;gap:5px;}
+.every-page-switch button{background:#fff;color:#111;border:1px solid #e5e5e5;border-radius:20px;padding:7px 13px;font-size:11px;font-weight:700;}
+.every-page-switch button.active{background:#111;color:#fff;border-color:#111;}
+.every-actions{display:flex;gap:7px;align-items:center;}
+.every-plus{width:42px;height:42px;min-width:42px;padding:0;border:0;border-radius:50%;background:#111;color:#fff;font-size:27px;font-weight:300;line-height:1;}
+.every-edit{min-height:38px;padding:7px 13px;border:1px solid #e5e5e5;background:#fff;color:#111;border-radius:20px;font-size:12px;}
+.every-viewport{flex:1;min-height:0;overflow:hidden;}
+.every-rail{display:flex;width:200%;height:100%;transition:transform .22s ease;}
+.every-panel{width:50%;height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:2px 1px 4px;}
+.every-title{font-size:28px;line-height:1.1;margin:9px 0 3px;font-weight:750;letter-spacing:-.8px;flex:0 0 auto;}
+.every-date{font-size:12px;color:#888;margin:0 0 12px;flex:0 0 auto;}
+.every-today-list{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding-right:2px;}
+.every-habit-row{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid #eee;min-height:46px;}
+.every-habit-check{flex:0 0 28px;width:28px;height:28px;min-width:28px;min-height:28px;border:1.5px solid #ccc;border-radius:8px;background:#fff;color:#fff;padding:0;display:grid;place-items:center;font-size:15px;}
+.every-habit-row.done .every-habit-check{background:#f28b32;border-color:#f28b32;color:#fff;}
+.every-habit-name{font-size:14px;line-height:1.35;min-width:0;flex:1;overflow-wrap:anywhere;}
+.every-habit-row.done .every-habit-name{color:#999;text-decoration:line-through;}
+.every-streak{margin-left:auto;font-size:11px;color:#999;white-space:nowrap;}
+.every-empty{color:#999;font-size:12px;padding:14px 2px;}
+.every-cal-head{display:flex;align-items:center;justify-content:space-between;margin:7px 0 13px;flex:0 0 auto;}
+.every-month{font-size:24px;font-weight:750;letter-spacing:-.7px;}
+.every-month-nav{display:flex;gap:7px;}
+.every-month-nav button{width:34px;height:34px;padding:0;border:1px solid #eee;border-radius:50%;background:#fff;color:#555;font-size:18px;}
+.every-week,.every-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
+.every-calendar{grid-template-rows:repeat(6,minmax(0,1fr));flex:1 1 auto;min-height:0;align-content:stretch;}
+.every-week{margin-bottom:6px;}
+.every-week span{text-align:center;color:#999;font-size:10px;font-weight:650;padding:0 0 3px;}
+.every-calendar{grid-auto-rows:minmax(0,1fr);min-height:0;flex:0 0 auto;}
+.every-cell{aspect-ratio:auto;min-width:0;min-height:0;height:100%;border-radius:9px;display:grid;place-items:center;font-size:12px;color:#555;border:0;padding:0;background:#eee;}
+.every-cell.blank{background:transparent;}
+.every-cell.future{color:#ccc;background:#fff;}
+.every-cell.today{box-shadow:inset 0 0 0 1.5px #222;font-weight:750;}
+.every-cell.selected{box-shadow:inset 0 0 0 2px #222;}
+.every-c0{background:#eee;color:#777}.every-c1{background:#fff1e5}.every-c2{background:#ffdcb9}.every-c3{background:#f8bd82}.every-c4{background:#ef9347;color:#fff}.every-c5{background:#c65f13;color:#fff;font-weight:800;}
+.every-details-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:stretch;margin-top:7px;overflow:hidden;}
+.every-details-toggle{flex:0 0 35px;height:35px;min-height:35px;padding:4px;border:0;background:transparent;color:#888;font-size:20px;}
+.every-details{display:none;flex:1;min-height:0;overflow-y:auto;border-top:1px solid #eee;padding:10px 2px 2px;}
+.every-details.open{display:block;}
+.every-details-title{font-size:12px;font-weight:750;margin:0 0 9px;}
+.every-details-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;margin:7px 0;}
+.every-detail-mark{width:17px;height:17px;border:1px solid #ccc;border-radius:5px;display:grid;place-items:center;font-size:10px;flex:0 0 17px;}
+.every-details-row.done .every-detail-mark{background:#f28b32;border-color:#f28b32;color:#fff;}
+.every-day-buttons{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
+.every-day-btn{height:38px;padding:0 1px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;font-size:11px;}
+.every-day-btn.active{background:#111;color:#fff;border-color:#111;}
+.every-edit-list{display:flex;flex-direction:column;gap:8px;}
+.every-edit-row{padding:12px;border:1px solid #eee;border-radius:10px;font-size:14px;min-height:42px;}
+@media(max-width:640px){
+ #everyView.view.active{gap:4px;}
+ .every-controls{flex:0 0 39px;min-height:39px;margin:0;padding:0 1px;}
+ .every-page-switch button{min-height:34px;padding:5px 11px;font-size:10px;}
+ .every-plus{width:39px;height:39px;min-width:39px;min-height:39px;font-size:25px;}
+ .every-edit{min-height:35px;padding:6px 11px;font-size:11px;}
+ .every-panel{padding:1px 1px 2px;}
+ .every-title{font-size:25px;margin:5px 0 2px;}
+ .every-date{font-size:11px;margin-bottom:7px;}
+ .every-today-list{overflow-y:auto;}
+ .every-habit-row{min-height:41px;padding:7px 2px;gap:8px;}
+ .every-habit-check{width:29px;height:29px;min-width:29px;min-height:29px;flex-basis:29px;}
+ .every-habit-name{font-size:12px;}
+ .every-streak{font-size:10px;}
+ .every-cal-head{margin:5px 0 9px;}
+ .every-month{font-size:21px;}
+ .every-month-nav button{width:31px;height:31px;}
+ .every-week,.every-calendar{gap:4px;}
+ .every-cell{border-radius:7px;font-size:11px;}
+ .every-details-wrap{margin-top:5px;}
+ .every-details-toggle{flex-basis:31px;height:31px;min-height:31px;}
+ .every-details{padding-top:8px;}
+ .every-day-btn{height:36px;font-size:10px;}
+}
 /* v43: clearer page actions, undone-first LIFE GRID, and square timetable cells */
 .home-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;margin:4px 0 8px;}
 .home-heading .eyebrow{margin:0;}
@@ -503,13 +577,14 @@ button,a{-webkit-user-select:none;user-select:none;}
 }
 
 </style>
-<!-- LIFE GRID v43 layout defaults -->
+<!-- LIFE GRID v44: EVERY habit tracking, calendar and cloud sync integration -->
 </head>
 <body>
 <div class="wrap">
   <header>
     <nav class="page-switcher" aria-label="ページ切り替え">
       <button type="button" class="page-tab active" id="navTimetable">時間割</button>
+      <button type="button" class="page-tab" id="navEvery">EVERY</button>
       <button type="button" class="page-tab" id="navTaskDay">TASK DAY</button>
       <button type="button" class="page-tab" id="navLifeGrid">LIFE GRID</button>
     </nav>
@@ -599,6 +674,17 @@ button,a{-webkit-user-select:none;user-select:none;}
         <div id="timetableGrid" class="timetable-grid" role="grid" aria-label="月曜日から金曜日までの時間割"></div>
       </div>
     </section>
+
+    <section id="everyView" class="view">
+      <div class="every-controls">
+        <div class="every-page-switch"><button type="button" id="everyTodayTab" class="active">TODAY</button><button type="button" id="everyCalendarTab">CALENDAR</button></div>
+        <div id="everyTodayActions" class="every-actions"><button type="button" id="everyAddButton" class="every-plus" aria-label="習慣を追加">＋</button><button type="button" id="everyEditButton" class="every-edit">Edit</button></div>
+      </div>
+      <div class="every-viewport" id="everyViewport"><div class="every-rail" id="everyRail">
+        <section class="every-panel" id="everyTodayPanel"><h1 class="every-title">Today</h1><div class="every-date" id="everyDate"></div><div class="every-today-list" id="everyTodayList"></div></section>
+        <section class="every-panel" id="everyCalendarPanel"><div class="every-cal-head"><div id="everyMonth" class="every-month"></div><div class="every-month-nav"><button type="button" id="everyPrev">‹</button><button type="button" id="everyNext">›</button></div></div><div class="every-week"><span>MON</span><span>TUE</span><span>WED</span><span>TH</span><span>FRI</span><span>SAT</span><span>SUN</span></div><div class="every-calendar" id="everyCalendar"></div><div class="every-details-wrap"><button type="button" id="everyDetailsToggle" class="every-details-toggle">⌄</button><div class="every-details" id="everyDetails"></div></div></section>
+      </div></div>
+    </section>
   </main>
 </div>
 
@@ -616,6 +702,8 @@ button,a{-webkit-user-select:none;user-select:none;}
 </div>
 
 
+<div id="everyHabitBackdrop" class="modal-backdrop" role="presentation"><section class="modal every-modal" role="dialog" aria-modal="true"><h2 id="everyHabitModalTitle">Add habit</h2><label for="everyHabitName">Habit name</label><input id="everyHabitName" maxlength="60" placeholder="Habit name"><label>Days of the week</label><div class="every-day-buttons" id="everyDayButtons"></div><div class="modal-actions"><button type="button" id="everyHabitCancel" class="light">Cancel</button><button type="button" id="everyHabitDelete" class="danger" hidden>Delete</button><button type="button" id="everyHabitSave">Save</button></div></section></div>
+<div id="everyEditBackdrop" class="modal-backdrop" role="presentation"><section class="modal every-modal" role="dialog" aria-modal="true"><h2>Edit habits</h2><div id="everyEditList" class="every-edit-list"></div><div class="modal-actions"><button type="button" id="everyEditDone">Done</button></div></section></div>
 <div id="deleteConfirmBackdrop" class="modal-backdrop" role="presentation">
   <section class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
     <h2 id="deleteConfirmTitle">シートを削除しますか？</h2>
@@ -712,6 +800,13 @@ button,a{-webkit-user-select:none;user-select:none;}
   var KEY = "life-grid-data-v2";
   var TIMETABLE_KEY = "life-grid-timetable-v1";
   var TASK_DAY_KEY = "life-grid-task-day-v1";
+  var EVERY_KEY = "life-grid-every-habits-v1";
+  var everyState = {versions:[],checks:{},nextId:1,selected:null,month:null,detailOpen:false,editVersionId:null,chosenDays:[0,1,2,3,4,5,6]};
+  var EVERY_DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  var everyToday = new Date(); everyToday.setHours(0,0,0,0);
+  var everyKey = function(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+  var everyParse = function(k){return new Date(k+"T00:00:00");};
+  everyState.selected=everyKey(everyToday); everyState.month=new Date(everyToday.getFullYear(),everyToday.getMonth(),1);
   var taskDayData = {active:[],completed:[]};
   var taskEditorTargetId = null;
   var taskEditorDifficulty = null;
@@ -1238,12 +1333,15 @@ button,a{-webkit-user-select:none;user-select:none;}
     $("lifeGridApp").classList.toggle("active",page==="lifegrid");
     $("taskDayView").classList.toggle("active",page==="taskday");
     $("timetableView").classList.toggle("active",page==="timetable");
+    $("everyView").classList.toggle("active",page==="every");
     $("navLifeGrid").classList.toggle("active",page==="lifegrid");
     $("navTaskDay").classList.toggle("active",page==="taskday");
     $("navTimetable").classList.toggle("active",page==="timetable");
+    $("navEvery").classList.toggle("active",page==="every");
     if(page==="lifegrid")renderHome();
     if(page==="taskday")renderTaskDay();
     if(page==="timetable")renderTimetable();
+    if(page==="every")everyRenderToday();
   }
   function show(which){
     $("homeView").classList.toggle("active",which==="home");
@@ -1958,8 +2056,33 @@ button,a{-webkit-user-select:none;user-select:none;}
     renderTaskDay();
   });
 
+
+  // v44 EVERY habit tracker: date-versioned habits, immutable past history, and calendar heatmap.
+  function everyLoad(){try{var raw=localStorage.getItem(EVERY_KEY);if(raw){var d=JSON.parse(raw);if(d&&Array.isArray(d.versions)&&d.checks&&typeof d.checks==="object")everyState=d;}}catch(e){everyState={versions:[],checks:{},nextId:1};}everyState.nextId=Number(everyState.nextId)||1;everyState.selected=everyKey(everyToday);everyState.month=new Date(everyToday.getFullYear(),everyToday.getMonth(),1);everyState.detailOpen=false;everyState.editVersionId=null;everyState.chosenDays=[0,1,2,3,4,5,6];}
+  function everySave(){try{localStorage.setItem(EVERY_KEY,JSON.stringify(everyState));return true;}catch(e){alert("EVERYの保存に失敗しました。");return false;}}
+  function everyVersion(lineage,k){return everyState.versions.filter(v=>v.lineage===lineage&&v.from<=k&&(!v.to||k<=v.to)).sort((a,b)=>b.from.localeCompare(a.from))[0]||null;}
+  function everyScheduled(k){var wd=(everyParse(k).getDay()+6)%7;var ids=[...new Set(everyState.versions.map(v=>v.lineage))];return ids.map(id=>everyVersion(id,k)).filter(v=>v&&v.days.includes(wd));}
+  function everyCheckMap(k){return everyState.checks[k]||{};}
+  function everyPct(k){var list=everyScheduled(k);return list.length?list.filter(v=>everyCheckMap(k)[v.lineage]).length/list.length*100:0;}
+  function everyColor(k){var p=everyPct(k);if(p===0)return 0;if(p<=25)return 1;if(p<=49)return 2;if(p<=74)return 3;if(p<100)return 4;return 5;}
+  function everyStreak(v){var n=0,d=new Date(everyToday);var kToday=everyKey(d);if(everyVersion(v.lineage,kToday)&&everyVersion(v.lineage,kToday).days.includes((d.getDay()+6)%7)&&everyCheckMap(kToday)[v.lineage]){n++;d.setDate(d.getDate()-1);}else d.setDate(d.getDate()-1);for(var i=0;i<700;i++){var k=everyKey(d),ver=everyVersion(v.lineage,k),wd=(d.getDay()+6)%7;if(!ver||!ver.days.includes(wd)){d.setDate(d.getDate()-1);continue;}if(everyCheckMap(k)[v.lineage]){n++;d.setDate(d.getDate()-1);}else break;}return n;}
+  function everyRenderToday(){var dateEl=$("everyDate");dateEl.textContent=everyToday.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});var listEl=$("everyTodayList");listEl.innerHTML="";everyScheduled(everyKey(everyToday)).forEach(v=>{var row=document.createElement("div");row.className="every-habit-row"+(everyCheckMap(everyKey(everyToday))[v.lineage]?" done":"");var check=document.createElement("button");check.type="button";check.className="every-habit-check";check.setAttribute("aria-label",v.name+" toggle complete");check.textContent=row.classList.contains("done")?"✓":"";var name=document.createElement("div");name.className="every-habit-name";name.textContent=v.name;var streak=document.createElement("div");streak.className="every-streak";streak.textContent=everyStreak(v)+" days";check.onclick=()=>{everyState.checks[everyKey(everyToday)]??={};everyState.checks[everyKey(everyToday)][v.lineage]=!everyState.checks[everyKey(everyToday)][v.lineage];everySave();everyRenderToday();everyRenderCalendar();};row.append(check,name,streak);listEl.append(row);});if(!listEl.children.length){var empty=document.createElement("div");empty.className="every-empty";empty.textContent="今日は予定されている習慣がありません。右上の＋から追加できます。";listEl.append(empty);}}
+  function everyRenderCalendar(){var y=everyState.month.getFullYear(),m=everyState.month.getMonth();$("everyMonth").textContent=everyState.month.toLocaleDateString("en-US",{month:"long",year:"numeric"});var cal=$("everyCalendar");cal.innerHTML="";var offset=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();for(var i=0;i<offset;i++){var blank=document.createElement("div");blank.className="every-cell blank";cal.append(blank);}for(var day=1;day<=n;day++){var d=new Date(y,m,day),k=everyKey(d),cell=document.createElement("button");cell.type="button";cell.className="every-cell";if(k===everyKey(everyToday))cell.classList.add("today");if(k===everyState.selected)cell.classList.add("selected");if(d>everyToday)cell.classList.add("future");else cell.classList.add("every-c"+everyColor(k));cell.textContent=day;cell.onclick=()=>{everyState.selected=k;everyRenderCalendar();everyRenderDetails();};cal.append(cell);}while(cal.children.length<42){var tail=document.createElement("div");tail.className="every-cell blank";cal.append(tail);}everyRenderDetails();}
+  function everyRenderDetails(){var box=$("everyDetails");box.innerHTML="";var k=everyState.selected||everyKey(everyToday),date=everyParse(k),head=document.createElement("div");head.className="every-details-title";head.textContent=date.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});box.append(head);var list=everyScheduled(k);if(!list.length){var none=document.createElement("div");none.className="every-empty";none.textContent="No habits scheduled.";box.append(none);return;}list.forEach(v=>{var row=document.createElement("div");row.className="every-details-row"+(everyCheckMap(k)[v.lineage]?" done":"");var mark=document.createElement("span");mark.className="every-detail-mark";mark.textContent=everyCheckMap(k)[v.lineage]?"✓":"";var name=document.createElement("span");name.textContent=v.name;row.append(mark,name);box.append(row);});}
+  function everySetPage(calendar){$("everyRail").style.transform=calendar?"translateX(-50%)":"translateX(0)";$("everyTodayActions").style.display=calendar?"none":"flex";$("everyTodayTab").classList.toggle("active",!calendar);$("everyCalendarTab").classList.toggle("active",calendar);if(!calendar){everyState.month=new Date(everyToday.getFullYear(),everyToday.getMonth(),1);everyState.selected=everyKey(everyToday);everyState.detailOpen=false;$("everyDetails").classList.remove("open");$("everyDetailsToggle").textContent="⌄";everyRenderToday();everyRenderCalendar();}}
+  function everyBuildDays(){var box=$("everyDayButtons");box.innerHTML="";EVERY_DAYS.forEach((day,i)=>{var b=document.createElement("button");b.type="button";b.className="every-day-btn"+(everyState.chosenDays.includes(i)?" active":"");b.textContent=day;b.onclick=()=>{everyState.chosenDays=everyState.chosenDays.includes(i)?everyState.chosenDays.filter(x=>x!==i):everyState.chosenDays.concat(i);everyBuildDays();};box.append(b);});}
+  function everyCurrent(lineage){return everyVersion(lineage,everyKey(everyToday));}
+  function everyOpenHabit(id=null){everyState.editVersionId=id;everyState.chosenDays=id===null?[0,1,2,3,4,5,6]:everyCurrent(id)?[...everyCurrent(id).days]:[];$ ("everyHabitName").value=id===null?"":everyCurrent(id)?.name||"";$("everyHabitModalTitle").textContent=id===null?"Add habit":"Edit habit";$("everyHabitDelete").hidden=id===null;everyBuildDays();$("everyHabitBackdrop").classList.add("open");}
+  function everyCloseHabit(){$("everyHabitBackdrop").classList.remove("open");}
+  function everySaveHabit(){var name=$("everyHabitName").value.trim(),days=everyState.chosenDays.slice().sort((a,b)=>a-b);if(!name){alert("習慣名を入力してください。");return;}if(!days.length){alert("実施曜日を1日以上選択してください。");return;}var todayKey=everyKey(everyToday),lineage=everyState.editVersionId;if(lineage!==null){var old=everyCurrent(lineage);if(!old){alert("編集対象が見つかりません。");return;}old.to=everyKey(new Date(everyToday.getTime()-86400000));everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}else{lineage=everyState.nextId++;everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();}
+  function everyDeleteHabit(){var id=everyState.editVersionId;if(id===null)return;if(!confirm("この習慣を今日以降の予定から削除しますか？過去の記録は保持されます。"))return;var old=everyCurrent(id);if(old)old.to=everyKey(new Date(everyToday.getTime()-86400000));everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();$("everyEditBackdrop").classList.add("open");everyRenderEditList();}
+  function everyRenderEditList(){var list=$("everyEditList");list.innerHTML="";var ids=[...new Set(everyState.versions.map(v=>v.lineage))];ids.forEach(id=>{var v=everyCurrent(id);if(!v)return;var row=document.createElement("button");row.type="button";row.className="every-edit-row light";row.textContent=v.name;row.onclick=()=>{$("everyEditBackdrop").classList.remove("open");everyOpenHabit(id);};list.append(row);});if(!list.children.length){var e=document.createElement("div");e.className="every-empty";e.textContent="習慣がありません。＋から追加してください。";list.append(e);}}
+  function everyInit(){everyLoad();everyRenderToday();everyRenderCalendar();$("everyAddButton").onclick=()=>everyOpenHabit();$("everyEditButton").onclick=()=>{everyRenderEditList();$("everyEditBackdrop").classList.add("open");};$("everyHabitCancel").onclick=everyCloseHabit;$("everyHabitSave").onclick=everySaveHabit;$("everyHabitDelete").onclick=everyDeleteHabit;$("everyEditDone").onclick=()=>$("everyEditBackdrop").classList.remove("open");$("everyTodayTab").onclick=()=>everySetPage(false);$("everyCalendarTab").onclick=()=>everySetPage(true);$("everyPrev").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()-1,1);everyRenderCalendar();};$("everyNext").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()+1,1);everyRenderCalendar();};$("everyDetailsToggle").onclick=()=>{everyState.detailOpen=!everyState.detailOpen;$("everyDetails").classList.toggle("open",everyState.detailOpen);$("everyDetailsToggle").textContent=everyState.detailOpen?"⌃":"⌄";};var x0=0,view=$("everyViewport");view.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;},{passive:true});view.addEventListener("touchend",e=>{var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>55)everySetPage(dx<0);},{passive:true});view.addEventListener("mousedown",e=>x0=e.clientX);view.addEventListener("mouseup",e=>{var dx=e.clientX-x0;if(Math.abs(dx)>80)everySetPage(dx<0);});$("everyHabitName").addEventListener("keydown",e=>{if(e.key==="Enter")everySaveHabit();});$("everyHabitBackdrop").addEventListener("click",e=>{if(e.target===$("everyHabitBackdrop"))everyCloseHabit();});$("everyEditBackdrop").addEventListener("click",e=>{if(e.target===$("everyEditBackdrop"))$("everyEditBackdrop").classList.remove("open");});}
+  everyInit();
+
   $("navLifeGrid").addEventListener("click",function(){setAppPage("lifegrid");});
   $("navTaskDay").addEventListener("click",function(){setAppPage("taskday");});
+  $("navEvery").addEventListener("click",function(){setAppPage("every");});
   $("navTimetable").addEventListener("click",function(){setAppPage("timetable");});
 
   $("timetableActionCancel").addEventListener("click",closeTimetableAction);
@@ -2134,12 +2257,13 @@ button,a{-webkit-user-select:none;user-select:none;}
   function buildBackupPayload(){
     return {
       app: "LIFE GRID",
-      formatVersion: 1,
+      formatVersion: 2,
       exportedAt: new Date().toISOString(),
       stores: {
         lifeGrid: JSON.parse(localStorage.getItem(KEY) || '{"sheets":[]}'),
         timetable: JSON.parse(localStorage.getItem(TIMETABLE_KEY) || '[]'),
-        taskDay: JSON.parse(localStorage.getItem(TASK_DAY_KEY) || '{"active":[],"completed":[]}')
+        taskDay: JSON.parse(localStorage.getItem(TASK_DAY_KEY) || '{"active":[],"completed":[]}'),
+        every: JSON.parse(localStorage.getItem(EVERY_KEY) || '{"versions":[],"checks":{},"nextId":1}')
       }
     };
   }
@@ -2168,7 +2292,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     var s=p.stores;
     return !!(s.lifeGrid && Array.isArray(s.lifeGrid.sheets) &&
       Array.isArray(s.timetable) &&
-      s.taskDay && Array.isArray(s.taskDay.active) && Array.isArray(s.taskDay.completed));
+      s.taskDay && Array.isArray(s.taskDay.active) && Array.isArray(s.taskDay.completed) && (!s.every || (Array.isArray(s.every.versions) && s.every.checks && typeof s.every.checks === "object")));
   }
   function importBackupFile(file){
     if(!file)return;
@@ -2186,6 +2310,7 @@ button,a{-webkit-user-select:none;user-select:none;}
         localStorage.setItem(KEY,JSON.stringify(parsed.stores.lifeGrid));
         localStorage.setItem(TIMETABLE_KEY,JSON.stringify(parsed.stores.timetable));
         localStorage.setItem(TASK_DAY_KEY,JSON.stringify(parsed.stores.taskDay));
+        localStorage.setItem(EVERY_KEY,JSON.stringify(parsed.stores.every || {versions:[],checks:{},nextId:1}));
         alert("復元しました。画面を再読み込みします。");
         location.reload();
       }catch(e){
@@ -2299,7 +2424,8 @@ button,a{-webkit-user-select:none;user-select:none;}
     const hasGoals=(st.lifeGrid.sheets||[]).some(sh=>(sh.goals||[]).length>0 || !!(sh.name||"").trim());
     const hasTimetable=(st.timetable||[]).some(c=>c && ((c.subject||"").trim() || (c.note||"").trim() || c.checked));
     const hasTasks=(st.taskDay.active||[]).length>0 || (st.taskDay.completed||[]).length>0;
-    return !hasGoals && !hasTimetable && !hasTasks;
+    const hasEvery=!!(st.every && st.every.versions && st.every.versions.length);
+    return !hasGoals && !hasTimetable && !hasTasks && !hasEvery;
   }
   function lgApplyCloudRecord(record){
     const payload=record && record.data;
@@ -2308,6 +2434,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     lgOriginalSetItem(KEY,JSON.stringify(payload.stores.lifeGrid));
     lgOriginalSetItem(TIMETABLE_KEY,JSON.stringify(payload.stores.timetable));
     lgOriginalSetItem(TASK_DAY_KEY,JSON.stringify(payload.stores.taskDay));
+    lgOriginalSetItem(EVERY_KEY,JSON.stringify(payload.stores.every || {versions:[],checks:{},nextId:1}));
     const appliedAt=record.updated_at || new Date().toISOString();
     lgWriteLocalUpdatedAt(appliedAt);
     lgLocalDirty=false;
@@ -2322,9 +2449,11 @@ button,a{-webkit-user-select:none;user-select:none;}
     load();
     loadTaskDay();
     loadTimetable();
+    everyLoad();
     renderHome();
     renderTaskDay();
     renderTimetable();
+    everyRenderToday(); everyRenderCalendar();
     if(wasSheetView && activeSheetId && data.sheets.some(sh=>sh.id===activeSheetId)){
       renderSheet();
     }else if(wasSheetView){
@@ -2516,6 +2645,7 @@ button,a{-webkit-user-select:none;user-select:none;}
       localStorage.removeItem(KEY);
       localStorage.removeItem(TIMETABLE_KEY);
       localStorage.removeItem(TASK_DAY_KEY);
+      localStorage.removeItem(EVERY_KEY);
       localStorage.removeItem(LG_LOCAL_UPDATED_KEY);
       location.reload();
     }catch(e){lgStatus("ログアウト失敗（データは端末に残しています）："+(e.message||e));}
@@ -2544,7 +2674,7 @@ button,a{-webkit-user-select:none;user-select:none;}
   // Debounced local -> cloud save, with dirty tracking for safe cross-device polling.
   localStorage.setItem=function(key,value){
     lgOriginalSetItem(key,value);
-    if([KEY,TIMETABLE_KEY,TASK_DAY_KEY].includes(key)){
+    if([KEY,TIMETABLE_KEY,TASK_DAY_KEY,EVERY_KEY].includes(key)){
       lgLocalDirty=true;lgLocalChangeSeq++;
       lgWriteLocalUpdatedAt(new Date().toISOString());
       if(lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}
