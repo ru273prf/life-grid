@@ -1,0 +1,1968 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<title>LIFE GRID v27</title>
+<style>
+:root{color-scheme:light;--black:#111;--gray:#777;--line:#e7e7e7;--light:#f5f5f5}
+*{box-sizing:border-box;color-scheme:light}
+body{margin:0;background:#fff;color:var(--black);font-family:Arial,"Noto Sans JP",sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:30px 20px 60px}
+header{display:flex;align-items:center;justify-content:flex-start;gap:16px;margin-bottom:34px}
+.logo{font-size:24px;font-weight:800;letter-spacing:-1px}
+.logo span{font-weight:400}
+button{font:inherit;cursor:pointer;border:1px solid var(--black);border-radius:8px;padding:10px 14px;background:var(--black);color:#fff}
+button:hover{opacity:.78}
+button.light{background:#fff;color:var(--black);border-color:var(--line)}
+button.danger{color:#a21d1d;border-color:#f0cccc;background:#fff}
+.eyebrow{font-size:11px;letter-spacing:2px;color:var(--gray);font-weight:bold;margin:0 0 18px}
+.view{display:none}.view.active{display:block}
+.page-switcher{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.page-tab{padding:8px 12px;border:1px solid #e2e2e2;border-radius:8px;background:#fff;color:#111;font-size:12px;font-weight:650;white-space:nowrap}
+.page-tab.active{background:#111;color:#fff;border-color:#111}
+.page-title-row{margin:4px 0 24px}
+.coming-soon-card{border:1px solid var(--line);border-radius:12px;padding:22px;max-width:480px;color:#111}
+.coming-soon-label{font-size:11px;font-weight:700;letter-spacing:2px;color:#888}
+.coming-soon-card p{font-size:14px;color:#666;margin:12px 0 0}
+.task-day-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:24px}
+.task-day-count{font-size:12px;color:#888;padding-bottom:7px}
+.task-list{display:flex;flex-direction:column;gap:2px;padding-bottom:92px}
+.task-item{display:flex;align-items:center;gap:13px;min-height:62px;padding:11px 4px;border-bottom:1px solid #ededed;transition:opacity .38s ease,transform .38s ease}
+.task-item.completing{opacity:.18;transform:translateX(8px) scale(.99);pointer-events:none}
+.task-check{width:23px;height:23px;min-width:23px;border:2px solid #bfc2c5;border-radius:50%;background:#fff;padding:0;display:flex;align-items:center;justify-content:center;color:#fff}
+.task-check:active{transform:scale(.94)}
+.task-main{min-width:0;flex:1;display:flex;flex-direction:row;align-items:center;gap:10px}
+.task-name-button{flex:1;min-width:0;border:0;background:transparent;color:#171717;padding:0;text-align:left;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.task-name-button:hover{opacity:.7}
+.task-deadline{flex-shrink:0;margin-left:auto;font-size:11px;color:#888;line-height:1.3;white-space:nowrap}
+.task-deadline.overdue{color:#b04444}
+.task-deadline.today{color:#9a7132}
+.task-item.completing{opacity:.24;transform:translateX(7px) scale(.99);pointer-events:auto}
+.task-item.completing .task-check{border-color:#aab9a8;background:#eaf3e9;color:#638060}
+.task-stars{display:flex;gap:2px;align-items:center;color:#b18a50;font-size:12px;letter-spacing:1px;line-height:1}
+.task-stars .empty-star{color:#dedede}
+.task-completed-section{border-top:1px solid #e8e8e8;margin-top:12px;padding-top:4px}
+.completed-toggle{width:100%;display:flex;align-items:center;gap:9px;padding:13px 2px;background:transparent;border:0;color:#777;text-align:left;font-size:12px}
+.completed-count{font-variant-numeric:tabular-nums;color:#aaa}
+.completed-chevron{margin-left:auto;font-size:18px;transition:transform .2s}
+.completed-toggle[aria-expanded="true"] .completed-chevron{transform:rotate(180deg)}
+.task-completed-list{padding:0 0 8px}
+.task-completed-item{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #f0f0f0;opacity:.62}
+.task-completed-mark{width:23px;height:23px;min-width:23px;border:1px solid #b9cbb7;border-radius:50%;background:#eaf3e9;color:#62805f;display:flex;align-items:center;justify-content:center;font-size:13px}
+.task-completed-name{flex:1;min-width:0;font-size:13px;color:#777;text-decoration:line-through;overflow-wrap:anywhere}
+.task-restore-button{padding:6px 10px;background:#fff;color:#555;border:1px solid #e1e1e1;border-radius:7px;font-size:11px;white-space:nowrap}
+.task-empty{padding:22px 4px 30px}
+.task-add-button{position:fixed;right:max(22px,calc((100vw - 920px)/2));bottom:28px;width:58px;height:58px;border-radius:50%;padding:0;background:#111;color:#fff;border:0;font-size:32px;font-weight:300;line-height:1;box-shadow:0 4px 18px #0002;z-index:3}
+.task-add-button:hover{opacity:.88}
+.timetable-scroll{width:100%;overflow-x:auto;padding-bottom:2px}
+.timetable-grid{display:grid;grid-template-columns:58px repeat(5,minmax(104px,1fr));grid-template-rows:46px repeat(6,minmax(76px,auto));gap:1px;min-width:620px;background:#dedede;border:1px solid #dedede}
+.timetable-corner,.timetable-day,.timetable-period,.timetable-cell{min-width:0;display:flex;align-items:center;justify-content:center;background:#fff;border:0;border-radius:0}
+.timetable-day{font-size:14px;font-weight:700;color:#111;padding:8px}
+.timetable-day:hover{background:#f7f7f7}
+.timetable-period{font-size:12px;font-weight:650;color:#777}
+.timetable-cell{padding:8px;font-size:13px;line-height:1.4;text-align:center;overflow-wrap:anywhere;color:#111;background:#fff;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.timetable-cell.empty-slot,.timetable-cell.checked-slot{background:#eaf3e9}
+.timetable-cell:focus-visible,.timetable-day:focus-visible{outline:2px solid #777;outline-offset:-3px;z-index:1}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;color:#111}
+.card:hover{border-color:#999}
+.card:focus-visible,.tile:focus-visible,button:focus-visible{outline:2px solid #777;outline-offset:3px}
+.card.add-sheet{min-height:142px;border:1px dashed #bbb;background:#fff;color:#777;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;font-size:25px}
+.card.add-sheet span{font-size:13px}
+.card-name{font-size:18px;font-weight:700;color:#111 !important;overflow-wrap:anywhere}
+.percent{font-size:28px;font-weight:800;letter-spacing:-1px;margin:18px 0 3px}
+.muted{font-size:12px;color:var(--gray)}
+.bar{height:5px;background:#eee;border-radius:9px;overflow:hidden;margin-top:12px}
+.sheet-filter-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--gray)}
+.sheet-filter-row label{margin:0}
+.sheet-filter-row select{font:inherit;color:#111;background:#fff;border:1px solid #ddd;border-radius:7px;padding:6px 10px;cursor:pointer}
+.bar-fill{height:100%;background:#111}
+.empty{padding:24px 0;color:var(--gray);font-size:14px}
+.back{margin-bottom:22px}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:24px}
+h1{font-size:clamp(28px,5vw,40px);letter-spacing:-1px;margin:0 0 8px;color:#111 !important;overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:9px}
+.tile{min-height:108px;text-align:left;background:#fff;color:#111;border:1px solid #ddd;border-radius:8px;padding:10px;display:flex;flex-direction:column;justify-content:space-between}
+.tile.done{background:#111;color:#fff;border-color:#111}
+.tile-meta{display:flex;align-items:center;gap:8px;min-height:12px;margin-bottom:9px}
+.tile-num{font-size:10px;line-height:1;opacity:.55;letter-spacing:1px;white-space:nowrap}
+.tile-title{font-size:13px;font-weight:650;line-height:1.4;color:inherit !important;-webkit-text-fill-color:currentColor;overflow-wrap:anywhere}
+.tile-date{font-size:10px;opacity:.65;margin-top:8px}
+.difficulty-stars{display:inline-flex;align-items:center;margin:0;color:#b18a50;font-size:11px;line-height:1;letter-spacing:1px;white-space:nowrap}
+.tile.done .difficulty-stars{color:#d8bd86}
+.difficulty-picker{display:flex;gap:7px;align-items:center;margin:5px 0 14px}
+.difficulty-picker button{padding:3px 4px;background:transparent;border:0;color:#f5c518;font-size:30px;line-height:1;cursor:pointer}
+.difficulty-picker button:focus-visible{outline:2px solid #f5c518;outline-offset:2px;border-radius:4px}
+.difficulty-help{font-size:12px;color:#777;margin:-7px 0 12px}
+.tile.add{border-style:dashed;color:#777;align-items:center;justify-content:center;text-align:center;font-size:25px}
+.tile.add span{font-size:12px;margin-top:5px}
+.tile.goal-tile{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.tile.goal-tile:active{cursor:grabbing}
+.tile.goal-tile.dragging{opacity:.35;border:1px dashed #777}
+.tile.goal-tile.drag-over{outline:2px solid #777;outline-offset:2px}
+.modal-backdrop{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:min(420px,100%);padding:22px;box-shadow:0 20px 60px #0003}
+.modal h2{font-size:20px;margin:0 0 18px}
+.modal label{display:block;color:var(--gray);font-size:12px;margin:12px 0 6px}
+.modal input,.modal textarea,.modal select{display:block;width:100%;padding:12px;border:1px solid #bbb;border-radius:7px;font:inherit;font-size:16px;background-color:#fff !important;color:#111 !important;-webkit-text-fill-color:#111 !important;caret-color:#111;opacity:1;forced-color-adjust:none;appearance:none;-webkit-appearance:none;box-shadow:none;text-shadow:none}
+.modal select{padding:12px;border:1px solid #bbb;border-radius:7px;font:inherit;font-size:16px;background:#fff;color:#111;margin-top:0}
+.modal textarea{min-height:112px;resize:vertical;line-height:1.5;color:#111 !important;-webkit-text-fill-color:#111 !important;background-color:#fff !important}
+.modal input::placeholder,.modal textarea::placeholder{color:#888 !important;-webkit-text-fill-color:#888 !important;opacity:1}
+.modal input:disabled,.modal textarea:disabled{background:#eee !important;color:#777 !important;-webkit-text-fill-color:#777 !important}
+.modal .status-row{display:flex;align-items:center;gap:9px;margin:14px 0 4px;color:#111;font-size:14px}
+.modal .status-row input{width:17px;height:17px;margin:0;accent-color:#111}
+.modal .field-help{font-size:12px;color:#888;margin:7px 0 0;line-height:1.5}
+.detail-value{font-size:14px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:10px 12px;background:#f7f7f7;border-radius:7px;min-height:40px}
+.modal-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px}
+.modal-actions button{flex:0 0 auto;min-width:max-content;white-space:nowrap;writing-mode:horizontal-tb;word-break:keep-all;line-height:1.2}
+.notice{font-size:12px;color:var(--gray);margin-top:22px}
+@media(max-width:640px){
+  .wrap{padding:18px 12px 34px}
+  header{align-items:flex-start;flex-direction:column;gap:14px;margin-bottom:28px}
+  .page-switcher{width:100%}
+  .page-tab{flex:1 1 auto}
+  .sheet-head{display:block}
+  .actions{margin-top:16px}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .tile{min-height:94px;padding:8px}
+}
+
+/* v25: mobile-first daily-use refinements */
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+body{ min-height:100dvh; overscroll-behavior-y:contain; }
+button, input, textarea, select{ -webkit-tap-highlight-color:transparent; }
+button{ touch-action:manipulation; }
+button:active,.card:active,.tile:active{ transform:scale(.985); }
+.page-switcher{
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  padding:10px 0 12px;border-bottom:1px solid #f0f0f0;
+}
+.page-tab{min-height:42px; flex:1 1 0; font-size:13px; }
+.task-add-button{
+  bottom:max(20px,env(safe-area-inset-bottom));
+  right:max(18px,calc((100vw - 920px)/2));
+  width:60px;height:60px;
+}
+.timetable-scroll{
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+}
+.timetable-corner,.timetable-period{
+  position:sticky;left:0;z-index:2;
+  background:#fafafa;
+  box-shadow:1px 0 0 #dedede;
+}
+.timetable-corner{z-index:4;}
+.timetable-day{position:sticky;top:0;z-index:3;background:#fafafa;}
+.timetable-cell{min-height:76px;}
+.task-check,.task-completed-mark{width:28px;height:28px;min-width:28px;}
+.task-item{min-height:66px;gap:14px;}
+.task-name-button{min-height:42px;display:flex;align-items:center;}
+.card,.tile{ -webkit-touch-callout:none; }
+.modal-backdrop{
+  padding: max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  overflow-y:auto;
+}
+.modal{
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.modal-actions{
+  position:sticky;bottom:-22px;
+  background:#fff;padding:12px 0 2px;
+}
+input,textarea,select{font-size:16px!important;}
+@media(max-width:640px){
+  .wrap{padding:0 12px max(28px,env(safe-area-inset-bottom));}
+  header{position:sticky;top:0;z-index:20;display:block;margin:0 -12px 18px;padding:0 12px;background:rgba(255,255,255,.94);}
+  .page-switcher{width:100%;gap:6px;}
+  .page-tab{padding:8px 5px;font-size:12px;min-width:0;}
+  .eyebrow{margin:8px 0 14px;}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+  .card{padding:14px;border-radius:11px;}
+  .card-name{font-size:16px;}
+  .percent{font-size:25px;margin:14px 0 3px;}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+  .tile{min-height:104px;padding:9px 8px;border-radius:9px;}
+  .tile-title{font-size:12px;}
+  .sheet-head{margin-bottom:18px;}
+  .sheet-head h1{font-size:28px;}
+  .actions button{min-height:42px;flex:1;}
+  .task-day-heading{margin:8px 0 12px;}
+  .task-list{padding-bottom:110px;}
+  .task-item{padding:10px 2px;}
+  .task-name-button{font-size:15px;}
+  .task-deadline{font-size:11px;}
+  .task-completed-section{margin-top:16px;}
+  .completed-toggle{min-height:46px;}
+  .timetable-grid{
+    grid-template-columns:48px repeat(5,minmax(92px,1fr));
+    grid-template-rows:44px repeat(6,minmax(82px,auto));
+    min-width:520px;
+  }
+  .timetable-day{font-size:13px;}
+  .timetable-period{font-size:11px;}
+  .timetable-cell{font-size:12px;padding:7px;min-height:82px;}
+  .modal-backdrop{align-items:flex-end;padding:0;}
+  .modal{
+    width:100%;max-width:none;
+    max-height:min(88dvh,760px);
+    border-radius:18px 18px 0 0;
+    padding:22px 18px calc(18px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px #0002;
+  }
+  .modal h2{font-size:19px;}
+  .modal-actions{bottom:calc(-18px - env(safe-area-inset-bottom));gap:7px;}
+  .modal-actions button{min-height:44px;}
+  .task-add-button{right:18px;bottom:max(18px,env(safe-area-inset-bottom));}
+}
+@media(max-width:360px){
+  .page-tab{font-size:11px;}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .timetable-grid{min-width:500px;}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;}
+}
+
+
+/* v26: data protection controls */
+.data-tools{display:flex;gap:7px;margin-left:auto;align-items:center}
+.data-tools button{font-size:11px;padding:8px 10px;white-space:nowrap;min-height:36px}
+@media(max-width:640px){
+  header{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding-top:8px;padding-bottom:8px}
+  .data-tools{margin:0 0 2px;justify-content:flex-end}
+  .data-tools button{flex:1;min-height:38px}
+}
+
+
+/* v27: Supabase account + cloud backup */
+.account-box{margin:0 0 16px;padding:12px;border:1px solid #e5e5e5;border-radius:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.account-box input{border:1px solid #ddd;border-radius:8px;padding:10px 12px;min-width:0;flex:1;font:inherit}
+.account-box .account-status{font-size:12px;color:#666;flex-basis:100%}
+.account-box button{padding:9px 12px;font-size:12px;min-height:38px}
+@media(max-width:640px){.account-box{display:grid;grid-template-columns:1fr 1fr}.account-box input{grid-column:span 2}.account-box .account-status{grid-column:span 2}.account-box button{width:100%}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="account-box" aria-label="クラウド保存アカウント">
+    <input id="accountEmail" type="email" autocomplete="email" placeholder="メールアドレス">
+    <input id="accountPassword" type="password" autocomplete="current-password" placeholder="パスワード（6文字以上）">
+    <button type="button" id="signInBtn">ログイン</button>
+    <button type="button" class="light" id="signUpBtn">新規登録</button>
+    <button type="button" class="light" id="cloudSaveBtn">クラウド保存</button>
+    <button type="button" class="light" id="cloudLoadBtn">クラウド復元</button>
+    <button type="button" class="light" id="signOutBtn" style="display:none">ログアウト</button>
+    <div class="account-status" id="accountStatus">クラウド保存：未ログイン（データはこの端末内に保存されています）</div>
+  </section>
+  <header>
+    <nav class="page-switcher" aria-label="ページ切り替え">
+      <button type="button" class="page-tab active" id="navTimetable">時間割</button>
+      <button type="button" class="page-tab" id="navTaskDay">TASK DAY</button>
+      <button type="button" class="page-tab" id="navLifeGrid">LIFE GRID</button>
+    </nav>
+    <div class="data-tools">
+      <button type="button" class="light" id="exportBackupButton">データを書き出す</button>
+      <button type="button" class="light" id="importBackupButton">復元</button>
+      <input type="file" id="importBackupFile" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <main>
+    <div id="lifeGridApp" class="view active">
+    <section id="homeView" class="view active">
+      <p class="eyebrow">YOUR SHEETS</p>
+      <div id="sheetCards" class="cards"></div>
+      <p id="homeEmpty" class="empty">まだシートがありません。下の「＋ シート追加」から作成できます。</p>
+    </section>
+
+    <section id="sheetView" class="view">
+      <button id="backButton" class="light back">← ホーム</button>
+      <div class="sheet-head">
+        <div>
+          <h1 id="sheetNameHeading"></h1>
+          <div id="sheetSummary" class="muted"></div>
+          <div class="sheet-filter-row">
+            <label for="goalViewMode">表示</label>
+            <select id="goalViewMode" aria-label="マスの表示順">
+              <option value="all">すべて</option>
+              <option value="undone">未達成のみ</option>
+            </select>
+          </div>
+          <div class="bar" style="max-width:360px"><div id="sheetProgress" class="bar-fill"></div></div>
+        </div>
+        <div class="actions">
+          <button id="renameButton" class="light">名前変更</button>
+          <button id="deleteButton" class="danger">削除</button>
+        </div>
+      </div>
+      <div id="goalGrid" class="grid"></div>
+      <p id="goalEmpty" class="empty">まだマスがありません。「マス追加」からやりたいことを登録しよう。</p>
+    </section>
+    </div>
+
+    <section id="taskDayView" class="view">
+      <div class="task-day-heading">
+        <div id="taskDayCount" class="task-day-count"></div>
+      </div>
+      <div id="taskActiveList" class="task-list"></div>
+      <p id="taskEmptyState" class="empty task-empty">タスクはまだありません。右下の＋から追加しよう。</p>
+      <section class="task-completed-section">
+        <button id="toggleCompletedTasks" class="completed-toggle" type="button" aria-expanded="false">
+          <span>最近完了したタスク</span>
+          <span id="completedTaskCount" class="completed-count">0 / 5</span>
+          <span id="completedChevron" class="completed-chevron">⌄</span>
+        </button>
+        <div id="taskCompletedList" class="task-completed-list" hidden></div>
+      </section>
+      <button id="addTaskButton" class="task-add-button" type="button" aria-label="タスクを追加">＋</button>
+    </section>
+
+    <section id="timetableView" class="view">
+      <div class="timetable-scroll">
+        <div id="timetableGrid" class="timetable-grid" role="grid" aria-label="月曜日から金曜日までの時間割"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">入力</h2>
+    <div id="modalContent"></div>
+    <div class="modal-actions">
+      <button id="cancelButton" class="light" type="button">キャンセル</button>
+      <button id="deleteGoalButton" class="danger" type="button" hidden>削除</button>
+      <button id="revertGoalButton" class="danger" type="button" hidden>未達成に戻す</button>
+      <button id="saveButton" type="button">保存</button>
+    </div>
+  </section>
+</div>
+
+
+<div id="deleteConfirmBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <h2 id="deleteConfirmTitle">シートを削除しますか？</h2>
+    <p id="deleteConfirmMessage" style="font-size:14px;line-height:1.7;margin:0"></p>
+    <div class="modal-actions">
+      <button id="deleteCancelButton" class="light" type="button">いいえ</button>
+      <button id="deleteAcceptButton" type="button">はい</button>
+    </div>
+  </section>
+</div>
+
+
+
+<div id="goalDeleteConfirmBackdrop" class="modal-backdrop" role="presentation" style="z-index:15">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="goalDeleteConfirmTitle">
+    <h2 id="goalDeleteConfirmTitle">マスを削除しますか？</h2>
+    <p id="goalDeleteConfirmMessage" style="font-size:14px;line-height:1.7;margin:0"></p>
+    <div class="modal-actions">
+      <button id="goalDeleteCancelButton" class="light" type="button">いいえ</button>
+      <button id="goalDeleteAcceptButton" class="danger" type="button">はい</button>
+    </div>
+  </section>
+</div>
+
+<div id="revertConfirmBackdrop" class="modal-backdrop" role="presentation" style="z-index:10">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="revertConfirmTitle">
+    <h2 id="revertConfirmTitle">未達成に戻しますか？</h2>
+    <p style="font-size:14px;line-height:1.7;margin:0">達成日と記録は削除されます。この操作は元に戻せません。未達成に戻しますか？</p>
+    <div class="modal-actions">
+      <button id="revertCancelButton" class="light" type="button">キャンセル</button>
+      <button id="revertAcceptButton" class="danger" type="button">はい</button>
+    </div>
+  </section>
+</div>
+
+<div id="taskEditorBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="taskEditorTitle">
+    <h2 id="taskEditorTitle">タスクを追加</h2>
+    <label for="taskTitleInput">タスク</label>
+    <input id="taskTitleInput" type="text" maxlength="160" placeholder="タスクを入力">
+    <label>優先度</label>
+    <div id="taskDifficultyPicker"></div>
+    <label for="taskDeadlineInput">期限（任意）</label>
+    <input id="taskDeadlineInput" type="date">
+    <div class="modal-actions">
+      <button id="taskEditorCancel" class="light" type="button">キャンセル</button>
+      <button id="taskEditorDelete" class="danger" type="button" hidden>削除</button>
+      <button id="taskEditorSave" type="button">保存</button>
+    </div>
+  </section>
+</div>
+
+<div id="timetableActionBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="timetableActionTitle">
+    <h2 id="timetableActionTitle">授業</h2>
+    <label for="timetableMemo">メモ</label>
+    <textarea id="timetableMemo" placeholder="この授業のメモ"></textarea>
+    <div class="modal-actions">
+      <button id="timetableActionCancel" class="light" type="button">キャンセル</button>
+      <button id="timetableActionClear" class="light" type="button">×</button>
+      <button id="timetableActionCheck" type="button">✓</button>
+    </div>
+  </section>
+</div>
+
+<div id="timetableEditBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="timetableEditTitle">
+    <h2 id="timetableEditTitle">授業を追加</h2>
+    <label for="timetableSubjectInput">授業名</label>
+    <input id="timetableSubjectInput" type="text" maxlength="100" placeholder="授業名を入力">
+    <div class="modal-actions">
+      <button id="timetableEditCancel" class="light" type="button">キャンセル</button>
+      <button id="timetableEditDelete" class="danger" type="button" hidden>削除</button>
+      <button id="timetableEditSave" type="button">保存</button>
+    </div>
+  </section>
+</div>
+
+<div id="weekdayResetBackdrop" class="modal-backdrop" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="weekdayResetTitle">
+    <h2 id="weekdayResetTitle">この曜日をリセットしますか？</h2>
+    <p id="weekdayResetMessage" style="font-size:14px;line-height:1.7;margin:0">登録されている授業のチェック状態を白に戻します。メモは残ります。</p>
+    <div class="modal-actions">
+      <button id="weekdayResetNo" class="light" type="button">いいえ</button>
+      <button id="weekdayResetYes" type="button">はい</button>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  "use strict";
+  var KEY = "life-grid-data-v2";
+  var TIMETABLE_KEY = "life-grid-timetable-v1";
+  var TASK_DAY_KEY = "life-grid-task-day-v1";
+  var taskDayData = {active:[],completed:[]};
+  var taskEditorTargetId = null;
+  var taskEditorDifficulty = null;
+  var pendingTaskCompletions = {};
+  var taskCompletionTimers = {};
+  var completedTasksExpanded = false;
+  var WEEKDAYS = ["月","火","水","木","金"];
+  var data = {sheets:[]};
+  var timetableCells = [];
+  var currentAppPage = "lifegrid";
+  var activeTimetableCellIndex = null;
+  var timetableLongPressTimer = null;
+  var timetableLongPressFired = false;
+  var suppressTimetableClickUntil = 0;
+  var pendingResetWeekday = null;
+  var activeSheetId = null;
+  var goalViewMode = "all";
+  var actionAfterSave = null;
+  var cancelAction = null;
+  var revertAction = null;
+  var modalEditGoalTarget = null;
+  var goalButtonAction = null;
+  var pendingRevertGoal = null;
+  var pendingRevertTitle = "";
+  var pendingDeleteGoal = null;
+  var imeComposing = false;
+  var compositionEndedAt = 0;
+  var activeEditingGoal = null;
+  var deleteConfirmStage = 0;
+  var draggedGoalIndex = null;
+  var touchDrag = null;
+  var suppressGoalClickUntil = 0;
+
+  function $(id){ return document.getElementById(id); }
+  function makeId(){
+    return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.sheets)) data = parsed;
+      }
+      // Compatibility cleanup for older/incomplete records.
+      data.sheets.forEach(function(sheet){
+        if(typeof sheet.name !== "string" || !sheet.name.trim()){
+          sheet.name = (typeof sheet.title === "string" && sheet.title.trim()) ? sheet.title :
+                       (typeof sheet.label === "string" && sheet.label.trim()) ? sheet.label : "";
+        }
+        if(!Array.isArray(sheet.goals)) sheet.goals = [];
+        sheet.goals.forEach(function(goal){
+          if(typeof goal.title !== "string" || !goal.title.trim()){
+            goal.title = (typeof goal.name === "string" && goal.name.trim()) ? goal.name :
+                         (typeof goal.text === "string" && goal.text.trim()) ? goal.text :
+                         (typeof goal.label === "string" && goal.label.trim()) ? goal.label : "";
+          }
+          if(typeof goal.note !== "string") goal.note = "";
+          if(typeof goal.date !== "string") goal.date = "";
+          goal.difficulty = normalizedDifficulty(goal.difficulty);
+          goal.done = !!goal.done;
+        });
+      });
+    } catch(e) {
+      alert("保存データを読み込めませんでした。このブラウザでローカル保存が制限されている可能性があります。");
+    }
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(data)); return true; }
+    catch(e){ alert("ブラウザへの保存に失敗しました。プライベートブラウズを解除して、Chrome / Edgeで開いてみてください。"); return false; }
+  }
+  function today(){
+    var d = new Date();
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  function getActiveSheet(){
+    for(var i=0;i<data.sheets.length;i++) if(data.sheets[i].id===activeSheetId) return data.sheets[i];
+    return null;
+  }
+  function doneCount(sheet){
+    return sheet.goals.filter(function(g){return g.done;}).length;
+  }
+  function progress(sheet){
+    return sheet.goals.length ? Math.round(doneCount(sheet)/sheet.goals.length*100) : 0;
+  }
+  function loadTaskDay(){
+    try{
+      var raw=localStorage.getItem(TASK_DAY_KEY);
+      if(raw){
+        var parsed=JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.active) && Array.isArray(parsed.completed)){
+          taskDayData={active:parsed.active,completed:parsed.completed.slice(0,5)};
+        }
+      }
+    }catch(e){
+      alert("TASK DAYのデータを読み込めませんでした。");
+    }
+    taskDayData.active=taskDayData.active.filter(function(task){return task && typeof task.title==="string";});
+    taskDayData.completed=taskDayData.completed.filter(function(task){return task && typeof task.title==="string";}).slice(0,5);
+  }
+  function saveTaskDay(){
+    try{
+      localStorage.setItem(TASK_DAY_KEY,JSON.stringify(taskDayData));
+      return true;
+    }catch(e){
+      alert("TASK DAYの保存に失敗しました。ブラウザのローカル保存を確認してください。");
+      return false;
+    }
+  }
+  function localDateString(date){
+    var y=date.getFullYear();
+    var m=String(date.getMonth()+1).padStart(2,"0");
+    var d=String(date.getDate()).padStart(2,"0");
+    return y+"-"+m+"-"+d;
+  }
+  function formatTaskDeadline(value){
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;
+    var parts=value.split("-");
+    return Number(parts[1])+"/"+Number(parts[2]);
+  }
+  function toggleTaskCompletionPending(id){
+    if(pendingTaskCompletions[id]){
+      clearTimeout(taskCompletionTimers[id]);
+      delete taskCompletionTimers[id];
+      delete pendingTaskCompletions[id];
+      renderTaskDay();
+      return;
+    }
+    pendingTaskCompletions[id]=true;
+    renderTaskDay();
+    taskCompletionTimers[id]=window.setTimeout(function(){
+      delete taskCompletionTimers[id];
+      delete pendingTaskCompletions[id];
+      completeTask(id);
+    },3000);
+  }
+  function taskStars(level){
+    var row=textElement("span","task-stars","");
+    var n=normalizedDifficulty(level);
+    for(var i=1;i<=5;i++){
+      var star=textElement("span",i<=n?"":"empty-star","★");
+      row.appendChild(star);
+    }
+    if(n===0)row.style.display="none";
+    return row;
+  }
+  function renderTaskDay(){
+    var root=$("taskActiveList");
+    if(!root)return;
+    root.innerHTML="";
+    var sorted=taskDayData.active.map(function(task,index){return {task:task,index:index};});
+    sorted.sort(function(a,b){
+      var priorityDiff=normalizedDifficulty(b.task.priority)-normalizedDifficulty(a.task.priority);
+      if(priorityDiff)return priorityDiff;
+      var aDue=a.task.deadline||"9999-12-31";
+      var bDue=b.task.deadline||"9999-12-31";
+      var deadlineDiff=aDue.localeCompare(bDue);
+      return deadlineDiff || a.index-b.index;
+    });
+    sorted.forEach(function(item){
+      var task=item.task;
+      var row=document.createElement("div");
+      row.className="task-item"+(pendingTaskCompletions[task.id]?" completing":"");
+      row.dataset.taskId=task.id;
+      var check=textElement("button","task-check",pendingTaskCompletions[task.id]?"✓":"");
+      check.type="button";
+      check.setAttribute("aria-label",pendingTaskCompletions[task.id]?"完了操作を取り消す":"完了にする");
+      check.addEventListener("click",function(){toggleTaskCompletionPending(task.id);});
+      row.appendChild(check);
+      var main=document.createElement("div");
+      main.className="task-main";
+      var name=textElement("button","task-name-button",task.title);
+      name.type="button";
+      name.addEventListener("click",function(){openTaskEditor(task.id);});
+      main.appendChild(name);
+      if(task.deadline){
+        var deadlineText=formatTaskDeadline(task.deadline);
+        var deadlineClass="task-deadline";
+        var today=localDateString(new Date());
+        if(task.deadline<today)deadlineClass+=" overdue";
+        else if(task.deadline===today)deadlineClass+=" today";
+        main.appendChild(textElement("span",deadlineClass,deadlineText));
+      }
+      row.appendChild(main);
+      root.appendChild(row);
+    });
+    $("taskEmptyState").style.display=taskDayData.active.length?"none":"block";
+    $("taskDayCount").textContent=taskDayData.active.length+" 件";
+    $("completedTaskCount").textContent=taskDayData.completed.length+" / 5";
+    $("taskCompletedList").hidden=!completedTasksExpanded;
+    $("toggleCompletedTasks").setAttribute("aria-expanded",String(completedTasksExpanded));
+    $("taskCompletedList").innerHTML="";
+    taskDayData.completed.forEach(function(task){
+      var row=document.createElement("div");
+      row.className="task-completed-item";
+      var mark=textElement("span","task-completed-mark","✓");
+      var name=textElement("span","task-completed-name",task.title);
+      var restore=textElement("button","task-restore-button","復活");
+      restore.type="button";
+      restore.addEventListener("click",function(){restoreTask(task.id);});
+      row.appendChild(mark);
+      row.appendChild(name);
+      row.appendChild(restore);
+      $("taskCompletedList").appendChild(row);
+    });
+  }
+  function openTaskEditor(id){
+    taskEditorTargetId=id||null;
+    var task=id?taskDayData.active.find(function(item){return item.id===id;}):null;
+    $("taskEditorTitle").textContent=task?"タスクを編集":"タスクを追加";
+    $("taskTitleInput").value=task?task.title:"";
+    $("taskDeadlineInput").value=task && task.deadline ? task.deadline : "";
+    $("taskEditorDelete").hidden=!task;
+    $("taskEditorBackdrop").classList.add("open");
+    var pickerContainer=$("taskDifficultyPicker");
+    pickerContainer.innerHTML="";
+    taskEditorDifficulty=createDifficultyPicker(pickerContainer,task?task.priority:3,null);
+    setTimeout(function(){$("taskTitleInput").focus();},0);
+  }
+  function closeTaskEditor(){
+    $("taskEditorBackdrop").classList.remove("open");
+    taskEditorTargetId=null;
+  }
+  function saveTaskEditor(){
+    var title=String($("taskTitleInput").value||"").trim();
+    if(!title){$("taskTitleInput").focus();return;}
+    var priority=taskEditorDifficulty?taskEditorDifficulty.getValue():3;
+    var deadline=$("taskDeadlineInput").value;
+    if(taskEditorTargetId){
+      var task=taskDayData.active.find(function(item){return item.id===taskEditorTargetId;});
+      if(!task)return;
+      var oldTitle=task.title,oldPriority=task.priority,oldDeadline=task.deadline;
+      task.title=title;task.priority=priority;task.deadline=deadline;
+      if(saveTaskDay()){
+        closeTaskEditor();renderTaskDay();
+      }else{
+        task.title=oldTitle;task.priority=oldPriority;task.deadline=oldDeadline;
+      }
+    }else{
+      var newTask={id:"task-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),title:title,priority:priority,deadline:deadline,createdAt:new Date().toISOString()};
+      taskDayData.active.push(newTask);
+      if(saveTaskDay()){
+        closeTaskEditor();renderTaskDay();
+      }else{
+        taskDayData.active.pop();
+      }
+    }
+  }
+  function deleteTaskFromActive(){
+    if(!taskEditorTargetId)return;
+    var index=taskDayData.active.findIndex(function(item){return item.id===taskEditorTargetId;});
+    if(index<0)return;
+    var removed=taskDayData.active.splice(index,1)[0];
+    if(pendingTaskCompletions[removed.id]){
+      clearTimeout(taskCompletionTimers[removed.id]);
+      delete taskCompletionTimers[removed.id];
+      delete pendingTaskCompletions[removed.id];
+    }
+    if(saveTaskDay()){
+      closeTaskEditor();renderTaskDay();
+    }else{
+      taskDayData.active.splice(index,0,removed);
+    }
+  }
+  function completeTask(id,row){
+    var index=taskDayData.active.findIndex(function(item){return item.id===id;});
+    if(index<0)return;
+    var task=taskDayData.active.splice(index,1)[0];
+    task.completedAt=new Date().toISOString();
+    taskDayData.completed.unshift(task);
+    taskDayData.completed=taskDayData.completed.slice(0,5);
+    if(!saveTaskDay()){
+      taskDayData.completed=taskDayData.completed.filter(function(item){return item.id!==id;});
+      taskDayData.active.splice(index,0,task);
+      return;
+    }
+    if(row)row.classList.add("completing");
+    window.setTimeout(renderTaskDay,390);
+  }
+  function restoreTask(id){
+    var index=taskDayData.completed.findIndex(function(item){return item.id===id;});
+    if(index<0)return;
+    var task=taskDayData.completed.splice(index,1)[0];
+    delete task.completedAt;
+    taskDayData.active.push(task);
+    if(saveTaskDay())renderTaskDay();
+    else{
+      taskDayData.active.pop();
+      taskDayData.completed.splice(index,0,task);
+    }
+  }
+  function ensureTimetableCells(){
+    while(timetableCells.length<30){
+      timetableCells.push({subject:"",note:"",checked:false});
+    }
+    timetableCells=timetableCells.slice(0,30).map(function(cell){
+      return {
+        subject:typeof cell.subject==="string"?cell.subject:"",
+        note:typeof cell.note==="string"?cell.note:"",
+        checked:!!cell.checked
+      };
+    });
+  }
+  function loadTimetable(){
+    try{
+      var raw=localStorage.getItem(TIMETABLE_KEY);
+      if(raw){
+        var parsed=JSON.parse(raw);
+        if(Array.isArray(parsed))timetableCells=parsed;
+      }
+    }catch(e){
+      alert("時間割データを読み込めませんでした。");
+    }
+    ensureTimetableCells();
+  }
+  function saveTimetable(){
+    try{
+      localStorage.setItem(TIMETABLE_KEY,JSON.stringify(timetableCells));
+      return true;
+    }catch(e){
+      alert("時間割の保存に失敗しました。ブラウザのローカル保存を確認してください。");
+      return false;
+    }
+  }
+  function timetableCellIndex(day,period){
+    return period*5+day;
+  }
+  function renderTimetable(){
+    var root=$("timetableGrid");
+    if(!root)return;
+    root.innerHTML="";
+    root.appendChild(textElement("div","timetable-corner",""));
+    WEEKDAYS.forEach(function(day,dayIndex){
+      var dayButton=textElement("button","timetable-day",day);
+      dayButton.type="button";
+      dayButton.setAttribute("aria-label",day+"曜日をリセット");
+      dayButton.addEventListener("click",function(){showWeekdayReset(dayIndex);});
+      root.appendChild(dayButton);
+    });
+    for(var period=0;period<6;period++){
+      root.appendChild(textElement("div","timetable-period",(period+1)+"限"));
+      for(var dayIndex=0;dayIndex<5;dayIndex++){
+        (function(day,periodNumber){
+          var index=timetableCellIndex(day,periodNumber);
+          var cell=timetableCells[index];
+          var registered=!!(cell.subject && cell.subject.trim());
+          var tile=textElement("button","timetable-cell"+(!registered?" empty-slot":(cell.checked?" checked-slot":"")),registered?cell.subject:"");
+          tile.type="button";
+          tile.dataset.cellIndex=String(index);
+          tile.setAttribute("aria-label",registered
+            ?WEEKDAYS[day]+"曜日 "+(periodNumber+1)+"限 "+cell.subject
+            :WEEKDAYS[day]+"曜日 "+(periodNumber+1)+"限（未登録）");
+          if(registered)tile.addEventListener("click",function(){
+            if(Date.now()<suppressTimetableClickUntil)return;
+            openTimetableAction(index);
+          });
+          else tile.addEventListener("click",function(){
+            // Empty timetable cells intentionally do nothing on tap.
+            if(Date.now()<suppressTimetableClickUntil)return;
+          });
+
+          tile.addEventListener("pointerdown",function(event){
+            if(event.pointerType==="mouse" && event.button!==0)return;
+            timetableLongPressFired=false;
+            clearTimeout(timetableLongPressTimer);
+            timetableLongPressTimer=setTimeout(function(){
+              timetableLongPressFired=true;
+              suppressTimetableClickUntil=Date.now()+900;
+              openTimetableEditor(index);
+            },560);
+          });
+          tile.addEventListener("pointermove",function(event){
+            if(!timetableLongPressTimer)return;
+            if(Math.abs(event.movementX||0)>8 || Math.abs(event.movementY||0)>8){
+              clearTimeout(timetableLongPressTimer);
+              timetableLongPressTimer=null;
+            }
+          });
+          function endLongPress(){
+            clearTimeout(timetableLongPressTimer);
+            timetableLongPressTimer=null;
+            if(timetableLongPressFired){
+              suppressTimetableClickUntil=Date.now()+900;
+              timetableLongPressFired=false;
+            }
+          }
+          tile.addEventListener("pointerup",endLongPress);
+          tile.addEventListener("pointercancel",endLongPress);
+          tile.addEventListener("pointerleave",function(){
+            if(timetableLongPressTimer){
+              clearTimeout(timetableLongPressTimer);
+              timetableLongPressTimer=null;
+            }
+          });
+          tile.addEventListener("contextmenu",function(event){event.preventDefault();});
+          root.appendChild(tile);
+        })(dayIndex,period);
+      }
+    }
+  }
+  function openTimetableAction(index){
+    var cell=timetableCells[index];
+    if(!cell || !cell.subject.trim())return;
+    activeTimetableCellIndex=index;
+    $("timetableActionTitle").textContent=cell.subject;
+    $("timetableMemo").value=cell.note||"";
+    $("timetableActionBackdrop").classList.add("open");
+    setTimeout(function(){$("timetableMemo").focus();},0);
+  }
+  function closeTimetableAction(){
+    $("timetableActionBackdrop").classList.remove("open");
+    activeTimetableCellIndex=null;
+  }
+  function commitTimetableAction(checked){
+    var index=activeTimetableCellIndex;
+    if(index===null)return;
+    var cell=timetableCells[index];
+    if(!cell)return;
+    var oldNote=cell.note,oldChecked=cell.checked;
+    cell.note=$("timetableMemo").value;
+    cell.checked=checked;
+    if(saveTimetable()){
+      closeTimetableAction();
+      renderTimetable();
+    }else{
+      cell.note=oldNote;
+      cell.checked=oldChecked;
+    }
+  }
+  function openTimetableEditor(index){
+    var cell=timetableCells[index];
+    if(!cell)return;
+    activeTimetableCellIndex=index;
+    var registered=!!(cell.subject && cell.subject.trim());
+    $("timetableEditTitle").textContent=registered?"授業を編集":"授業を追加";
+    $("timetableSubjectInput").value=cell.subject||"";
+    $("timetableEditDelete").hidden=!registered;
+    $("timetableEditBackdrop").classList.add("open");
+    setTimeout(function(){
+      $("timetableSubjectInput").focus();
+      $("timetableSubjectInput").select();
+    },0);
+  }
+  function closeTimetableEditor(){
+    $("timetableEditBackdrop").classList.remove("open");
+    activeTimetableCellIndex=null;
+  }
+  function saveTimetableSubject(){
+    var index=activeTimetableCellIndex;
+    if(index===null)return;
+    var cell=timetableCells[index];
+    if(!cell)return;
+    var value=String($("timetableSubjectInput").value||"").trim();
+    if(!value){
+      $("timetableSubjectInput").focus();
+      return;
+    }
+    var previous=cell.subject;
+    cell.subject=value;
+    if(saveTimetable()){
+      closeTimetableEditor();
+      renderTimetable();
+    }else{
+      cell.subject=previous;
+    }
+  }
+  function deleteTimetableSubject(){
+    var index=activeTimetableCellIndex;
+    if(index===null)return;
+    var cell=timetableCells[index];
+    if(!cell)return;
+    if(!window.confirm("この授業を削除しますか？"))return;
+    var previous={subject:cell.subject,note:cell.note,checked:cell.checked};
+    cell.subject="";
+    cell.note="";
+    cell.checked=false;
+    if(saveTimetable()){
+      closeTimetableEditor();
+      renderTimetable();
+    }else{
+      cell.subject=previous.subject;
+      cell.note=previous.note;
+      cell.checked=previous.checked;
+    }
+  }
+  function showWeekdayReset(dayIndex){
+    pendingResetWeekday=dayIndex;
+    $("weekdayResetTitle").textContent="この曜日をリセットしますか？";
+    $("weekdayResetMessage").textContent=WEEKDAYS[dayIndex]+"曜日の登録済み授業をすべて白に戻します。各授業のメモは残ります。";
+    $("weekdayResetBackdrop").classList.add("open");
+  }
+  function closeWeekdayReset(){
+    $("weekdayResetBackdrop").classList.remove("open");
+    pendingResetWeekday=null;
+  }
+  function confirmWeekdayReset(){
+    if(pendingResetWeekday===null)return;
+    var day=pendingResetWeekday;
+    var previous=[];
+    for(var period=0;period<6;period++){
+      var cell=timetableCells[timetableCellIndex(day,period)];
+      if(cell.subject && cell.subject.trim()){
+        previous.push({cell:cell,checked:cell.checked});
+        cell.checked=false;
+      }
+    }
+    if(saveTimetable()){
+      closeWeekdayReset();
+      renderTimetable();
+    }else{
+      previous.forEach(function(item){item.cell.checked=item.checked;});
+    }
+  }
+  function setAppPage(page){
+    currentAppPage=page;
+    $("lifeGridApp").classList.toggle("active",page==="lifegrid");
+    $("taskDayView").classList.toggle("active",page==="taskday");
+    $("timetableView").classList.toggle("active",page==="timetable");
+    $("navLifeGrid").classList.toggle("active",page==="lifegrid");
+    $("navTaskDay").classList.toggle("active",page==="taskday");
+    $("navTimetable").classList.toggle("active",page==="timetable");
+    if(page==="lifegrid")renderHome();
+    if(page==="taskday")renderTaskDay();
+    if(page==="timetable")renderTimetable();
+  }
+  function show(which){
+    $("homeView").classList.toggle("active",which==="home");
+    $("sheetView").classList.toggle("active",which==="sheet");
+  }
+  function forceVisibleTextControl(el){
+    el.style.setProperty("color","#111","important");
+    el.style.setProperty("background-color","#fff","important");
+    el.style.setProperty("-webkit-text-fill-color","#111","important");
+    el.style.setProperty("caret-color","#111","important");
+    el.style.setProperty("color-scheme","light","important");
+    el.style.setProperty("forced-color-adjust","none","important");
+    el.style.setProperty("opacity","1","important");
+    return el;
+  }
+  function textElement(tag,className,value){
+    var el=document.createElement(tag);
+    if(className) el.className=className;
+    el.textContent=value;
+    return el;
+  }
+  function normalizedDifficulty(value){
+    var n=Number(value);
+    if(!Number.isFinite(n))return 0;
+    return Math.max(0,Math.min(5,Math.round(n)));
+  }
+
+  function createDifficultyDisplay(value){
+    var level=normalizedDifficulty(value);
+    // Empty difficulty is intentionally omitted from the tile.
+    if(level===0)return null;
+    var row=textElement("span","difficulty-stars","★".repeat(level));
+    row.setAttribute("aria-label","難易度 "+level+" / 5");
+    row.title="難易度 "+level+" / 5";
+    return row;
+  }
+
+  function createDifficultyPicker(container,initialValue,onChange){
+    var value=normalizedDifficulty(initialValue);
+    var row=document.createElement("div");
+    row.className="difficulty-picker";
+    row.setAttribute("role","group");
+    row.setAttribute("aria-label","難易度 5段階");
+
+    var buttons=[];
+    function update(){
+      buttons.forEach(function(button,index){
+        var level=index+1;
+        button.textContent=level<=value?"★":"☆";
+        button.setAttribute("aria-pressed",String(level===value));
+        button.setAttribute("aria-label","難易度 "+level+" / 5");
+        button.style.setProperty("color","#f5c518","important");
+        button.style.setProperty("-webkit-text-fill-color","#f5c518","important");
+      });
+    }
+    for(var i=1;i<=5;i++){
+      (function(level){
+        var button=document.createElement("button");
+        button.type="button";
+        button.textContent="☆";
+        button.addEventListener("click",function(){
+          value=level;
+          update();
+          if(onChange)onChange(value);
+        });
+        buttons.push(button);
+        row.appendChild(button);
+      })(i);
+    }
+    container.appendChild(row);
+    var help=textElement("div","difficulty-help","星を選んで難易度を設定（1〜5）");
+    container.appendChild(help);
+    update();
+    return {
+      getValue:function(){return value;},
+      setValue:function(next){value=normalizedDifficulty(next);update();}
+    };
+  }
+
+  function renderHome(){
+    var root=$("sheetCards"); root.innerHTML="";
+    $("homeEmpty").style.display=data.sheets.length?"none":"block";
+    data.sheets.forEach(function(sheet){
+      var card=document.createElement("article"); card.className="card"; card.setAttribute("role","button"); card.tabIndex=0;
+      var name=textElement("div","card-name",sheet.name && sheet.name.trim() ? sheet.name : "（シート名未入力）"); name.style.setProperty("color","#111","important"); name.style.setProperty("-webkit-text-fill-color","#111","important");
+      var pct=textElement("div","percent",progress(sheet)+"%");
+      var count=textElement("div","muted",doneCount(sheet)+" / "+sheet.goals.length+" 達成");
+      var bar=document.createElement("div"); bar.className="bar";
+      var fill=document.createElement("div"); fill.className="bar-fill"; fill.style.width=progress(sheet)+"%"; bar.appendChild(fill);
+      card.appendChild(name); card.appendChild(pct); card.appendChild(count); card.appendChild(bar);
+      card.addEventListener("click",function(){openSheet(sheet.id);});
+      card.addEventListener("keydown",function(e){
+        if(e.key==="Enter" || e.key===" "){
+          e.preventDefault();
+          openSheet(sheet.id);
+        }
+      });
+      root.appendChild(card);
+    });
+
+    var addCard=document.createElement("button");
+    addCard.type="button";
+    addCard.className="card add-sheet";
+    addCard.appendChild(document.createTextNode("+"));
+    addCard.appendChild(textElement("span","","シート追加"));
+    addCard.addEventListener("click",addSheet);
+    root.appendChild(addCard);
+  }
+  function openSheet(id){
+    activeSheetId=id; show("sheet"); renderSheet();
+  }
+  function renderSheet(){
+    var sheet=getActiveSheet(); if(!sheet){show("home");renderHome();return;}
+    $("sheetNameHeading").textContent=sheet.name && sheet.name.trim() ? sheet.name : "（シート名未入力）";
+    $("sheetSummary").textContent=doneCount(sheet)+" / "+sheet.goals.length+" 達成 · "+progress(sheet)+"%";
+    $("sheetProgress").style.width=progress(sheet)+"%";
+    $("goalEmpty").style.display=sheet.goals.length?"none":"block";
+    $("goalViewMode").value=goalViewMode;
+    var root=$("goalGrid"); root.innerHTML="";
+
+    var displayGoals=sheet.goals.map(function(goal,originalIndex){
+      return {goal:goal,originalIndex:originalIndex};
+    });
+
+    if(goalViewMode==="undone"){
+      displayGoals=displayGoals.filter(function(item){return !item.goal.done;});
+      displayGoals.sort(function(a,b){
+        var difficultyDiff=(Number(b.goal.difficulty)||0)-(Number(a.goal.difficulty)||0);
+        return difficultyDiff || a.originalIndex-b.originalIndex;
+      });
+    }else{
+      displayGoals.sort(function(a,b){
+        if(a.goal.done && b.goal.done){
+          // Completed goals: newest completion date first.
+          var dateDiff=String(b.goal.date||"").localeCompare(String(a.goal.date||""));
+          return dateDiff || a.originalIndex-b.originalIndex;
+        }
+        if(a.goal.done!==b.goal.done)return a.goal.done?-1:1;
+        var difficultyDiff=(Number(b.goal.difficulty)||0)-(Number(a.goal.difficulty)||0);
+        return difficultyDiff || a.originalIndex-b.originalIndex;
+      });
+    }
+
+    displayGoals.forEach(function(item){
+      var goal=item.goal;
+      var index=item.originalIndex;
+      var tile=document.createElement("button");
+      tile.type="button";
+      tile.draggable=false;
+      tile.dataset.goalIndex=String(index);
+      tile.className="tile goal-tile"+(goal.done?" done":"");
+      tile.title=goal.done
+        ?"クリックで達成記録を見る・ドラッグで移動"
+        :"クリックで達成を記録・ドラッグで移動";
+      var meta=textElement("div","tile-meta","");
+      meta.appendChild(textElement("span","tile-num",String(index+1).padStart(3,"0")));
+      // Show only filled stars, inline beside the number, before and after completion.
+      var difficultyDisplay=createDifficultyDisplay(goal.difficulty);
+      if(difficultyDisplay)meta.appendChild(difficultyDisplay);
+      tile.appendChild(meta);
+      var titleNode=textElement("span","tile-title",goal.title && goal.title.trim() ? goal.title : "（目標名未入力）");
+      var visibleTileText=goal.done?"#fff":"#111";
+      titleNode.style.setProperty("color",visibleTileText,"important");
+      titleNode.style.setProperty("-webkit-text-fill-color",visibleTileText,"important");
+      tile.appendChild(titleNode);
+      tile.appendChild(textElement("span","tile-date",goal.done?"✓ "+(goal.date||""):""));
+
+      // Drag to reorder. A normal click opens the goal; there is no long-press action.
+      var gesture=null;
+      tile.addEventListener("pointerdown",function(e){
+        if(goalViewMode==="all" || goalViewMode==="undone")return;
+        if(e.pointerType==="mouse" && e.button!==0)return;
+        gesture={
+          startIndex:index,
+          startX:e.clientX,
+          startY:e.clientY,
+          dragging:false,
+          targetIndex:index
+        };
+        try{tile.setPointerCapture(e.pointerId);}catch(err){}
+      });
+      tile.addEventListener("pointermove",function(e){
+        if(!gesture)return;
+        var state=gesture;
+        var dx=e.clientX-state.startX;
+        var dy=e.clientY-state.startY;
+        if(!state.dragging && Math.sqrt(dx*dx+dy*dy)>10){
+          state.dragging=true;
+          tile.classList.add("dragging");
+        }
+        if(state.dragging){
+          e.preventDefault();
+          var under=document.elementFromPoint(e.clientX,e.clientY);
+          var target=under && under.closest ? under.closest(".goal-tile") : null;
+          root.querySelectorAll(".goal-tile").forEach(function(el){el.classList.remove("drag-over");});
+          if(target){
+            state.targetIndex=Number(target.dataset.goalIndex);
+            target.classList.add("drag-over");
+          }
+        }
+      });
+      function finishGesture(cancelled){
+        if(!gesture)return;
+        var state=gesture;
+        gesture=null;
+        tile.classList.remove("dragging");
+        root.querySelectorAll(".goal-tile").forEach(function(el){el.classList.remove("drag-over");});
+        if(state.dragging){
+          suppressGoalClickUntil=Date.now()+700;
+          if(!cancelled && state.targetIndex!==state.startIndex){
+            var moved=sheet.goals.splice(state.startIndex,1)[0];
+            sheet.goals.splice(state.targetIndex,0,moved);
+            if(save()){renderSheet();renderHome();}
+          }
+        }
+      }
+      tile.addEventListener("pointerup",function(){finishGesture(false);});
+      tile.addEventListener("pointercancel",function(){finishGesture(true);});
+
+      tile.addEventListener("click",function(e){
+        if(Date.now()<suppressGoalClickUntil){e.preventDefault();return;}
+        handleGoalClick(goal);
+      });
+      root.appendChild(tile);
+    });
+    var add=document.createElement("button");
+    add.type="button"; add.className="tile add";
+    add.appendChild(document.createTextNode("+"));
+    add.appendChild(textElement("span","", "マス追加"));
+    add.addEventListener("click",addGoal); root.appendChild(add);
+  }
+  function openModal(title,label,value,kind,onSave,saveLabel){
+    $("modalTitle").textContent=title;
+    var content=$("modalContent"); content.innerHTML="";
+    var lab=textElement("label","",label); lab.htmlFor="modalInput";
+    var input=document.createElement("input"); input.id="modalInput"; input.type=kind||"text"; forceVisibleTextControl(input);
+    if(value!==undefined) input.value=value;
+    if(kind!=="date") input.maxLength=180;
+    // Do not bind Enter to Save: Japanese IME uses Enter to confirm conversion.
+    // The user saves with the visible Save button after text composition is complete.
+    content.appendChild(lab); content.appendChild(input);
+    $("cancelButton").textContent="キャンセル";
+    $("cancelButton").hidden=false;
+    $("revertGoalButton").hidden=true;
+    $("deleteGoalButton").hidden=true;
+    $("saveButton").textContent=saveLabel||"保存";
+    actionAfterSave=onSave;
+    cancelAction=null;
+    revertAction=null;
+    modalEditGoalTarget=null;
+    goalButtonAction=null;
+    activeEditingGoal=null;
+    $("modalBackdrop").classList.add("open");
+    setTimeout(function(){input.focus();},0);
+  }
+  function openCompletionModal(goal){
+    $("modalTitle").textContent="達成を記録";
+    var content=$("modalContent"); content.innerHTML="";
+
+    var dateLabel=textElement("label","","達成日"); dateLabel.htmlFor="completionDate";
+    var dateInput=document.createElement("input"); dateInput.id="completionDate"; dateInput.type="date"; dateInput.value=today(); dateInput.required=true; forceVisibleTextControl(dateInput);
+    content.appendChild(dateLabel);content.appendChild(dateInput);
+
+    var noteLabel=textElement("label","","ひとこと・記録"); noteLabel.htmlFor="completionNote";
+    var noteInput=document.createElement("textarea"); noteInput.id="completionNote"; forceVisibleTextControl(noteInput);
+    noteInput.placeholder="達成したときのことや感想を残そう";
+    content.appendChild(noteLabel);content.appendChild(noteInput);
+
+    $("cancelButton").textContent="キャンセル";
+    $("cancelButton").hidden=false;
+    $("revertGoalButton").hidden=true;
+    $("deleteGoalButton").hidden=false;
+    $("deleteGoalButton").textContent="編集";
+    $("deleteGoalButton").className="light";
+    modalEditGoalTarget=goal;
+    goalButtonAction="edit";
+    activeEditingGoal=null;
+    $("saveButton").textContent="達成！";
+    cancelAction=null;
+    revertAction=null;
+    actionAfterSave=function(){
+      if(!dateInput.value){dateInput.focus();return false;}
+      goal.done=true;
+      goal.date=dateInput.value;
+      goal.note=noteInput.value.trim();
+      if(save()){renderSheet();renderHome();}
+      return true;
+    };
+    $("modalBackdrop").classList.add("open");
+    setTimeout(function(){dateInput.focus();},0);
+  }
+  function openGoalDetails(goal){
+    $("modalTitle").textContent=goal.title;
+    var content=$("modalContent"); content.innerHTML="";
+    content.appendChild(textElement("label","","達成日"));
+    content.appendChild(textElement("p","detail-value",goal.date||"日付の記録なし"));
+    content.appendChild(textElement("label","","記録"));
+    content.appendChild(textElement("p","detail-value",goal.note||"記録はありません。"));
+
+    $("cancelButton").textContent="閉じる";
+    $("cancelButton").hidden=false;
+    $("revertGoalButton").hidden=true;
+    $("deleteGoalButton").hidden=true;
+    modalEditGoalTarget=null;
+    goalButtonAction=null;
+    activeEditingGoal=null;
+    $("saveButton").textContent="編集";
+    cancelAction=null;
+    revertAction=null;
+    actionAfterSave=function(){
+      closeModal();
+      editGoal(goal);
+      return false;
+    };
+    $("modalBackdrop").classList.add("open");
+  }
+  function closeModal(){
+    $("modalBackdrop").classList.remove("open");
+    actionAfterSave=null;
+    cancelAction=null;
+    revertAction=null;
+    $("cancelButton").textContent="キャンセル";
+    $("cancelButton").hidden=false;
+    $("revertGoalButton").hidden=true;
+    $("deleteGoalButton").hidden=true;
+    modalEditGoalTarget=null;
+    goalButtonAction=null;
+    activeEditingGoal=null;
+  }
+  function cancelModal(){
+    var fn=cancelAction;
+    closeModal();
+    if(fn)fn();
+  }
+  function submitModal(){
+    if(!actionAfterSave){closeModal();return;}
+
+    // Generic name dialogs create #modalInput. Pass its current value to the
+    // save callback; custom forms (completion/editor/details) read their own fields.
+    var input=$("modalInput");
+    var result;
+    if(input){
+      var value=String(input.value||"").trim();
+      if(!value){input.focus();return;}
+      result=actionAfterSave(value);
+    }else{
+      result=actionAfterSave();
+    }
+
+    // A callback can return false to keep the dialog open (validation or save failure).
+    if(result===false)return;
+    closeModal();
+  }
+  function addSheet(){
+    openModal("シート追加","シート名","", "text",function(name){
+      name=String(name||"").trim();
+      if(!name)return false;
+      var sheet={id:makeId(),name:name,goals:[]};
+      data.sheets.push(sheet);
+      if(save()){renderHome();openSheet(sheet.id);return true;}
+      data.sheets.pop();
+      return false;
+    });
+  }
+  function addGoal(){
+    var sheet=getActiveSheet(); if(!sheet)return;
+    $("modalTitle").textContent="マス追加";
+    var content=$("modalContent");content.innerHTML="";
+
+    var titleLabel=textElement("label","","やりたいこと");
+    titleLabel.htmlFor="addGoalTitle";
+    var titleInput=document.createElement("input");
+    forceVisibleTextControl(titleInput);
+    titleInput.id="addGoalTitle";
+    titleInput.type="text";
+    titleInput.maxLength=180;
+    content.appendChild(titleLabel);
+    content.appendChild(titleInput);
+
+    content.appendChild(textElement("label","","難易度"));
+    var picker=createDifficultyPicker(content,0,null);
+
+    $("cancelButton").textContent="キャンセル";
+    $("cancelButton").hidden=false;
+    $("saveButton").textContent="追加";
+    $("revertGoalButton").hidden=true;
+    $("deleteGoalButton").hidden=true;
+    modalEditGoalTarget=null;
+    goalButtonAction=null;
+    activeEditingGoal=null;
+    cancelAction=null;
+    revertAction=null;
+    actionAfterSave=function(){
+      var title=String(titleInput.value||"").trim();
+      if(!title){titleInput.focus();return false;}
+      var goal={id:makeId(),title:title,done:false,date:"",note:"",difficulty:picker.getValue()};
+      sheet.goals.push(goal);
+      if(save()){renderSheet();renderHome();return true;}
+      sheet.goals.pop();
+      return false;
+    };
+    $("modalBackdrop").classList.add("open");
+    setTimeout(function(){titleInput.focus();},0);
+  }
+  function showGoalDeleteConfirmation(goal){
+    pendingDeleteGoal=goal;
+    $("goalDeleteConfirmTitle").textContent="マスを削除しますか？";
+    $("goalDeleteConfirmMessage").textContent="「"+goal.title+"」を削除します。この操作は取り消せません。";
+    $("goalDeleteConfirmBackdrop").classList.add("open");
+    // Put initial keyboard focus on the safe option.
+    setTimeout(function(){$("goalDeleteCancelButton").focus();},0);
+  }
+
+  function closeGoalDeleteConfirmation(){
+    $("goalDeleteConfirmBackdrop").classList.remove("open");
+    pendingDeleteGoal=null;
+  }
+
+  function confirmDeleteGoal(){
+    var sheet=getActiveSheet();
+    var goal=pendingDeleteGoal;
+    if(!sheet || !goal)return;
+
+    var index=sheet.goals.indexOf(goal);
+    if(index<0){closeGoalDeleteConfirmation();return;}
+
+    var removed=sheet.goals.splice(index,1)[0];
+    if(save()){
+      closeGoalDeleteConfirmation();
+      closeModal();
+      renderSheet();
+      renderHome();
+    }else{
+      sheet.goals.splice(index,0,removed);
+    }
+  }
+
+  function editGoal(goal){
+    activeEditingGoal=goal;
+    $("modalTitle").textContent="マスを編集";
+    var content=$("modalContent"); content.innerHTML="";
+
+    var titleLabel=textElement("label","","やりたいこと");
+    titleLabel.htmlFor="editGoalTitle";
+    var titleInput=document.createElement("input");
+    forceVisibleTextControl(titleInput);
+    titleInput.id="editGoalTitle";
+    titleInput.type="text";
+    titleInput.maxLength=180;
+    titleInput.value=goal.title;
+    content.appendChild(titleLabel);
+    content.appendChild(titleInput);
+
+    content.appendChild(textElement("label","","難易度"));
+    var difficultyPicker=createDifficultyPicker(content,goal.difficulty, null);
+
+    var sourceSheet=getActiveSheet();
+    var moveLabel=textElement("label","","移動先のシート");
+    moveLabel.htmlFor="editGoalDestination";
+    content.appendChild(moveLabel);
+    var destinationSelect=document.createElement("select");
+    destinationSelect.id="editGoalDestination";
+    var stayOption=document.createElement("option");
+    stayOption.value="";
+    stayOption.textContent="このシートのまま";
+    destinationSelect.appendChild(stayOption);
+    var otherSheetCount=0;
+    data.sheets.forEach(function(sheet){
+      if(sheet.id===sourceSheet.id)return;
+      var option=document.createElement("option");
+      option.value=sheet.id;
+      option.textContent=sheet.name && sheet.name.trim() ? sheet.name : "（シート名未入力）";
+      destinationSelect.appendChild(option);
+      otherSheetCount++;
+    });
+    content.appendChild(destinationSelect);
+    if(otherSheetCount===0){
+      destinationSelect.disabled=true;
+      content.appendChild(textElement("p","field-help","移動先にできる別のシートがありません。シートを追加すると選択できます。"));
+    }
+
+    var dateInput=null;
+    var noteInput=null;
+    if(goal.done){
+      var dateLabel=textElement("label","","達成日");
+      dateLabel.htmlFor="editGoalDate";
+      dateInput=document.createElement("input");
+      forceVisibleTextControl(dateInput);
+      dateInput.id="editGoalDate";
+      dateInput.type="date";
+      dateInput.value=goal.date||today();
+      content.appendChild(dateLabel);
+      content.appendChild(dateInput);
+
+      var noteLabel=textElement("label","","記録");
+      noteLabel.htmlFor="editGoalNote";
+      noteInput=document.createElement("textarea");
+      forceVisibleTextControl(noteInput);
+      noteInput.id="editGoalNote";
+      noteInput.placeholder="達成したときのことや感想";
+      noteInput.value=goal.note||"";
+      content.appendChild(noteLabel);
+      content.appendChild(noteInput);
+    }
+
+    $("cancelButton").textContent="キャンセル";
+    $("cancelButton").hidden=false;
+    $("saveButton").textContent="保存";
+    $("revertGoalButton").hidden=!goal.done;
+    $("deleteGoalButton").hidden=false;
+    $("deleteGoalButton").textContent="削除";
+    $("deleteGoalButton").className="danger";
+    modalEditGoalTarget=goal;
+    goalButtonAction="delete";
+    cancelAction=null;
+    revertAction=null;
+
+    actionAfterSave=function(){
+      var title=String(titleInput.value||"").trim();
+      if(!title){titleInput.focus();return false;}
+      if(goal.done && !dateInput.value){dateInput.focus();return false;}
+
+      var targetSheet=sourceSheet;
+      var destinationId=destinationSelect.value;
+      if(destinationId){
+        for(var s=0;s<data.sheets.length;s++){
+          if(data.sheets[s].id===destinationId){
+            targetSheet=data.sheets[s];
+            break;
+          }
+        }
+      }
+      if(!targetSheet)return false;
+
+      var oldTitle=goal.title;
+      var oldDate=goal.date;
+      var oldNote=goal.note;
+      var oldDifficulty=goal.difficulty;
+      var sourceIndex=sourceSheet.goals.indexOf(goal);
+      var moved=targetSheet!==sourceSheet;
+      if(moved && sourceIndex<0)return false;
+
+      goal.title=title;
+      goal.difficulty=difficultyPicker.getValue();
+      if(goal.done){
+        goal.date=dateInput.value;
+        goal.note=noteInput.value.trim();
+      }
+      if(moved){
+        sourceSheet.goals.splice(sourceIndex,1);
+        targetSheet.goals.push(goal);
+      }
+
+      if(save()){
+        if(moved)activeSheetId=targetSheet.id;
+        renderSheet();
+        renderHome();
+        return true;
+      }
+
+      if(moved){
+        var targetIndex=targetSheet.goals.indexOf(goal);
+        if(targetIndex>=0)targetSheet.goals.splice(targetIndex,1);
+        sourceSheet.goals.splice(sourceIndex,0,goal);
+      }
+      goal.title=oldTitle;
+      goal.date=oldDate;
+      goal.note=oldNote;
+      goal.difficulty=oldDifficulty;
+      return false;
+    };
+
+    $("modalBackdrop").classList.add("open");
+    setTimeout(function(){titleInput.focus();titleInput.select();},0);
+  }
+
+  function showRevertConfirmation(goal){
+    var titleInput=$("editGoalTitle");
+    var currentTitle=titleInput ? String(titleInput.value||"").trim() : goal.title;
+    if(!currentTitle){
+      if(titleInput)titleInput.focus();
+      return;
+    }
+    pendingRevertGoal=goal;
+    pendingRevertTitle=currentTitle;
+    $("revertConfirmBackdrop").classList.add("open");
+  }
+
+  function closeRevertConfirmation(){
+    $("revertConfirmBackdrop").classList.remove("open");
+    pendingRevertGoal=null;
+    pendingRevertTitle="";
+  }
+
+  function confirmRevertGoal(){
+    var goal=pendingRevertGoal;
+    if(!goal)return;
+
+    var previous={
+      title:goal.title,
+      done:goal.done,
+      date:goal.date,
+      note:goal.note
+    };
+
+    goal.title=pendingRevertTitle || goal.title;
+    goal.done=false;
+    goal.date="";
+    goal.note="";
+
+    if(save()){
+      closeRevertConfirmation();
+      renderSheet();
+      renderHome();
+      closeModal();
+    }else{
+      goal.title=previous.title;
+      goal.done=previous.done;
+      goal.date=previous.date;
+      goal.note=previous.note;
+    }
+  }
+
+  function getEditingGoalFromModal(){
+    var currentSheet=getActiveSheet();
+    if(!currentSheet)return null;
+    var titleField=$("editGoalTitle");
+    if(!titleField)return null;
+    // The editor is opened from a goal object; keep its reference while editing.
+    return activeEditingGoal;
+  }
+
+  function handleGoalClick(goal){
+    if(goal.done){openGoalDetails(goal);}
+    else{openCompletionModal(goal);}
+  }
+
+  function showDeleteConfirmation(stage){
+    var sheet=getActiveSheet();if(!sheet)return;
+    deleteConfirmStage=stage;
+
+    $("deleteConfirmTitle").textContent="シート削除の確認（"+stage+"/3）";
+    if(stage===1){
+      $("deleteConfirmMessage").textContent="「"+sheet.name+"」シートを削除しますか？";
+    }else if(stage===2){
+      $("deleteConfirmMessage").textContent="本当に削除しますか？「"+sheet.name+"」シート内のマスもすべて削除されます。";
+    }else{
+      $("deleteConfirmMessage").textContent="最後の確認です。「"+sheet.name+"」シートとすべてのマスを完全に削除します。この操作は取り消せません。";
+    }
+
+    $("deleteCancelButton").textContent="いいえ";
+    $("deleteAcceptButton").textContent="はい";
+
+    // Switch button positions on every confirmation:
+    // 1st: はい on the left / いいえ on the right
+    // 2nd: いいえ on the left / はい on the right
+    // 3rd: はい on the left / いいえ on the right
+    var actionRow=$("deleteAcceptButton").parentNode;
+    if(stage%2===1){
+      actionRow.appendChild($("deleteAcceptButton"));
+      actionRow.appendChild($("deleteCancelButton"));
+    }else{
+      actionRow.appendChild($("deleteCancelButton"));
+      actionRow.appendChild($("deleteAcceptButton"));
+    }
+
+    $("deleteConfirmBackdrop").classList.add("open");
+    setTimeout(function(){$("deleteCancelButton").focus();},0);
+  }
+  function closeDeleteConfirmation(){
+    $("deleteConfirmBackdrop").classList.remove("open");
+    deleteConfirmStage=0;
+  }
+  function acceptDeleteConfirmation(){
+    if(deleteConfirmStage>=1 && deleteConfirmStage<3){
+      showDeleteConfirmation(deleteConfirmStage+1);
+      return;
+    }
+    if(deleteConfirmStage!==3)return;
+
+    var previousSheets=data.sheets.slice();
+    data.sheets=data.sheets.filter(function(s){return s.id!==activeSheetId;});
+    if(save()){
+      activeSheetId=null;
+      closeDeleteConfirmation();
+      show("home");
+      renderHome();
+    }else{
+      data.sheets=previousSheets;
+    }
+  }
+
+  $("addTaskButton").addEventListener("click",function(){openTaskEditor(null);});
+  $("taskEditorCancel").addEventListener("click",closeTaskEditor);
+  $("taskEditorSave").addEventListener("click",saveTaskEditor);
+  $("taskEditorDelete").addEventListener("click",function(){
+    if(window.confirm("このタスクを削除しますか？"))deleteTaskFromActive();
+  });
+  $("taskEditorBackdrop").addEventListener("click",function(event){
+    if(event.target===$("taskEditorBackdrop"))closeTaskEditor();
+  });
+  $("toggleCompletedTasks").addEventListener("click",function(){
+    completedTasksExpanded=!completedTasksExpanded;
+    renderTaskDay();
+  });
+
+  $("navLifeGrid").addEventListener("click",function(){setAppPage("lifegrid");});
+  $("navTaskDay").addEventListener("click",function(){setAppPage("taskday");});
+  $("navTimetable").addEventListener("click",function(){setAppPage("timetable");});
+
+  $("timetableActionCancel").addEventListener("click",closeTimetableAction);
+  $("timetableActionClear").addEventListener("click",function(){commitTimetableAction(false);});
+  $("timetableActionCheck").addEventListener("click",function(){commitTimetableAction(true);});
+  $("timetableActionBackdrop").addEventListener("click",function(event){
+    if(event.target===$("timetableActionBackdrop"))closeTimetableAction();
+  });
+  $("timetableEditCancel").addEventListener("click",closeTimetableEditor);
+  $("timetableEditSave").addEventListener("click",saveTimetableSubject);
+  $("timetableEditDelete").addEventListener("click",deleteTimetableSubject);
+  $("timetableEditBackdrop").addEventListener("click",function(event){
+    if(event.target===$("timetableEditBackdrop"))closeTimetableEditor();
+  });
+  $("weekdayResetNo").addEventListener("click",closeWeekdayReset);
+  $("weekdayResetYes").addEventListener("click",confirmWeekdayReset);
+  $("weekdayResetBackdrop").addEventListener("click",function(event){
+    if(event.target===$("weekdayResetBackdrop"))closeWeekdayReset();
+  });
+
+  $("goalViewMode").addEventListener("change",function(){
+    goalViewMode=$("goalViewMode").value;
+    renderSheet();
+  });
+  $("backButton").addEventListener("click",function(){show("home");renderHome();});
+  $("cancelButton").addEventListener("click",cancelModal);
+  $("saveButton").addEventListener("click",submitModal);
+  $("revertGoalButton").addEventListener("click",function(){
+    var goal=getEditingGoalFromModal();
+    if(goal)showRevertConfirmation(goal);
+  });
+  $("deleteGoalButton").addEventListener("click",function(){
+    var goal=modalEditGoalTarget;
+    if(!goal)return;
+    if(goalButtonAction==="edit"){
+      closeModal();
+      editGoal(goal);
+    }else if(goalButtonAction==="delete"){
+      showGoalDeleteConfirmation(goal);
+    }
+  });
+  $("goalDeleteCancelButton").addEventListener("click",closeGoalDeleteConfirmation);
+  $("goalDeleteAcceptButton").addEventListener("click",confirmDeleteGoal);
+  $("goalDeleteConfirmBackdrop").addEventListener("click",function(e){
+    if(e.target===$("goalDeleteConfirmBackdrop"))closeGoalDeleteConfirmation();
+  });
+  $("revertCancelButton").addEventListener("click",closeRevertConfirmation);
+  $("revertAcceptButton").addEventListener("click",confirmRevertGoal);
+  $("revertConfirmBackdrop").addEventListener("click",function(e){
+    if(e.target===$("revertConfirmBackdrop"))closeRevertConfirmation();
+  });
+  $("modalBackdrop").addEventListener("click",function(e){if(e.target===$("modalBackdrop"))closeModal();});
+  $("renameButton").addEventListener("click",function(){
+    var sheet=getActiveSheet();if(!sheet)return;
+    openModal("シート名変更","シート名",sheet.name,"text",function(name){
+      name=String(name||"").trim();
+      if(!name)return false;
+      var previousName=sheet.name;
+      sheet.name=name;
+      if(save()){renderSheet();renderHome();return true;}
+      sheet.name=previousName;
+      return false;
+    });
+  });
+  $("deleteButton").addEventListener("click",function(){showDeleteConfirmation(1);});
+  $("deleteCancelButton").addEventListener("click",closeDeleteConfirmation);
+  $("deleteAcceptButton").addEventListener("click",acceptDeleteConfirmation);
+  $("deleteConfirmBackdrop").addEventListener("click",function(e){
+    if(e.target===$("deleteConfirmBackdrop"))closeDeleteConfirmation();
+  });
+
+
+  // Keyboard support for desktop use.
+  // Enter submits one-line/date fields; Ctrl+Enter submits a multi-line note.
+  // IME composition Enter is ignored so Japanese conversion is not submitted early.
+  document.addEventListener("compositionstart",function(){imeComposing=true;},true);
+  document.addEventListener("compositionend",function(){
+    imeComposing=false;
+    compositionEndedAt=Date.now();
+  },true);
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){
+      if($("taskEditorBackdrop").classList.contains("open")){
+        closeTaskEditor(); e.preventDefault(); return;
+      }
+      if($("weekdayResetBackdrop").classList.contains("open")){
+        closeWeekdayReset(); e.preventDefault(); return;
+      }
+      if($("timetableEditBackdrop").classList.contains("open")){
+        closeTimetableEditor(); e.preventDefault(); return;
+      }
+      if($("timetableActionBackdrop").classList.contains("open")){
+        closeTimetableAction(); e.preventDefault(); return;
+      }
+      if($("goalDeleteConfirmBackdrop").classList.contains("open")){
+        closeGoalDeleteConfirmation(); e.preventDefault(); return;
+      }
+      if($("revertConfirmBackdrop").classList.contains("open")){
+        closeRevertConfirmation(); e.preventDefault(); return;
+      }
+      if($("deleteConfirmBackdrop").classList.contains("open")){
+        closeDeleteConfirmation(); e.preventDefault(); return;
+      }
+      if($("modalBackdrop").classList.contains("open")){
+        closeModal(); e.preventDefault(); return;
+      }
+    }
+
+    if(e.key!=="Enter")return;
+    if(e.isComposing || e.keyCode===229 || imeComposing || Date.now()-compositionEndedAt<100)return;
+
+    // Do not hijack Enter when a confirmation button is focused; native button
+    // keyboard activation handles that case.
+    if($("goalDeleteConfirmBackdrop").classList.contains("open") ||
+       $("revertConfirmBackdrop").classList.contains("open") ||
+       $("deleteConfirmBackdrop").classList.contains("open"))return;
+
+    if(!$("modalBackdrop").classList.contains("open"))return;
+    var target=e.target;
+    if(target && target.tagName==="TEXTAREA"){
+      if(e.ctrlKey || e.metaKey){
+        e.preventDefault();
+        $("saveButton").click();
+      }
+      return;
+    }
+    if(target && target.matches && target.matches('input:not([type="checkbox"])')){
+      e.preventDefault();
+      $("saveButton").click();
+    }
+  },true);
+
+
+  // v26 data protection: export/import all three independent app stores together.
+  function buildBackupPayload(){
+    return {
+      app: "LIFE GRID",
+      formatVersion: 1,
+      exportedAt: new Date().toISOString(),
+      stores: {
+        lifeGrid: JSON.parse(localStorage.getItem(KEY) || '{"sheets":[]}'),
+        timetable: JSON.parse(localStorage.getItem(TIMETABLE_KEY) || '[]'),
+        taskDay: JSON.parse(localStorage.getItem(TASK_DAY_KEY) || '{"active":[],"completed":[]}')
+      }
+    };
+  }
+  function downloadBackup(){
+    try{
+      var payload = buildBackupPayload();
+      var blob = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var stamp = new Date();
+      var name = "LIFE_GRID_backup_" +
+        stamp.getFullYear() + String(stamp.getMonth()+1).padStart(2,"0") +
+        String(stamp.getDate()).padStart(2,"0") + "_" +
+        String(stamp.getHours()).padStart(2,"0") +
+        String(stamp.getMinutes()).padStart(2,"0") + ".json";
+      a.href=url;a.download=name;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url);},1500);
+      alert("バックアップを書き出しました。ファイルアプリやiCloud Driveなどに保管してください。");
+    }catch(e){
+      alert("バックアップの作成に失敗しました。保存容量やブラウザの状態を確認してください。");
+    }
+  }
+  function validateBackup(p){
+    if(!p || p.app!=="LIFE GRID" || !p.stores) return false;
+    var s=p.stores;
+    return !!(s.lifeGrid && Array.isArray(s.lifeGrid.sheets) &&
+      Array.isArray(s.timetable) &&
+      s.taskDay && Array.isArray(s.taskDay.active) && Array.isArray(s.taskDay.completed));
+  }
+  function importBackupFile(file){
+    if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var parsed=JSON.parse(String(reader.result||""));
+        if(!validateBackup(parsed)){
+          alert("このファイルはLIFE GRIDのバックアップとして認識できませんでした。現在のデータは変更していません。");
+          return;
+        }
+        if(!confirm("バックアップの内容で現在のデータを置き換えます。復元前に現在のデータも自動でバックアップします。続けますか？"))return;
+        // Preserve the current state in a separate downloadable recovery file before replacement.
+        downloadBackup();
+        localStorage.setItem(KEY,JSON.stringify(parsed.stores.lifeGrid));
+        localStorage.setItem(TIMETABLE_KEY,JSON.stringify(parsed.stores.timetable));
+        localStorage.setItem(TASK_DAY_KEY,JSON.stringify(parsed.stores.taskDay));
+        alert("復元しました。画面を再読み込みします。");
+        location.reload();
+      }catch(e){
+        alert("復元に失敗しました。ファイルが壊れているか、保存領域に問題がある可能性があります。現在のデータは変更されていない場合があります。");
+      }
+    };
+    reader.onerror=function(){alert("バックアップファイルを読み込めませんでした。");};
+    reader.readAsText(file);
+  }
+  $("exportBackupButton").addEventListener("click",downloadBackup);
+  $("importBackupButton").addEventListener("click",function(){$("importBackupFile").click();});
+  $("importBackupFile").addEventListener("change",function(e){
+    var file=e.target.files && e.target.files[0];
+    importBackupFile(file);
+    e.target.value="";
+  });
+
+  // v27 cloud backup/auth using Supabase (user-scoped row protected by RLS)
+  const LG_SUPABASE_URL = "https://ezdkpdthcchlqjfrncqk.supabase.co";
+  const LG_SUPABASE_ANON_KEY = "sb_publishable__Nkl15LlN2BIPkdqxFxHpw_LF3UqBV5";
+  let lgSupabase = null, lgUser = null, lgSyncTimer = null;
+  const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
+  try { if(window.supabase && window.supabase.createClient) lgSupabase=window.supabase.createClient(LG_SUPABASE_URL,LG_SUPABASE_ANON_KEY); }
+  catch(err){ lgStatus("Supabase接続の初期化に失敗しました。ネット接続を確認してください。"); }
+  function lgAccountUi(){
+    const logged=!!lgUser;
+    document.getElementById("signInBtn").style.display=logged?"none":"";
+    document.getElementById("signUpBtn").style.display=logged?"none":"";
+    document.getElementById("signOutBtn").style.display=logged?"":"none";
+    if(logged) lgStatus("ログイン中："+lgUser.email+" ／ 編集内容は自動クラウド保存されます");
+    else lgStatus("クラウド保存：未ログイン（データはこの端末内に保存されています）");
+  }
+  async function lgGetBackup(){
+    if(!lgSupabase||!lgUser) throw new Error("ログインしてください。");
+    const {data,error}=await lgSupabase.from("life_grid_backups").select("data").eq("user_id",lgUser.id).maybeSingle();
+    if(error) throw error; return data?.data||null;
+  }
+  async function lgSaveCloud(showMsg=true){
+    if(!lgSupabase||!lgUser) {if(showMsg)lgStatus("クラウド保存するにはログインしてください。");return;}
+    const payload=buildBackupPayload();
+    const row={user_id:lgUser.id,data:payload,updated_at:new Date().toISOString()};
+    const {error}=await lgSupabase.from("life_grid_backups").upsert(row,{onConflict:"user_id"});
+    if(error) throw error;
+    if(showMsg)lgStatus("クラウド保存しました："+new Date().toLocaleTimeString());
+  }
+  async function lgRestoreCloud(){
+    const payload=await lgGetBackup();
+    if(!payload){lgStatus("クラウド上にバックアップがありません。まず「クラウド保存」を押してください。");return;}
+    if(!validateBackup(payload)){lgStatus("クラウドバックアップの形式が不正です。復元を中止しました。");return;}
+    if(!confirm("クラウドバックアップでこの端末のデータを置き換えます。現在のデータは先にファイルへバックアップします。復元しますか？"))return;
+    downloadBackup();
+    localStorage.setItem(KEY,JSON.stringify(payload.stores.lifeGrid));
+    localStorage.setItem(TIMETABLE_KEY,JSON.stringify(payload.stores.timetable));
+    localStorage.setItem(TASK_DAY_KEY,JSON.stringify(payload.stores.taskDay));
+    lgStatus("クラウドから復元しました。再読み込みします。"); location.reload();
+  }
+  async function lgAfterLogin(){
+    const {data:{session}}=await lgSupabase.auth.getSession(); lgUser=session?.user||null; lgAccountUi();
+    if(lgUser){try{const cloud=await lgGetBackup(); if(cloud){
+      const local=buildBackupPayload(); const localEmpty=(local.stores.lifeGrid.sheets||[]).length===0 && local.stores.timetable.length===0 && local.stores.taskDay.active.length===0 && local.stores.taskDay.completed.length===0;
+      if(localEmpty && confirm("クラウドに以前のバックアップが見つかりました。今の端末に復元しますか？")){await lgRestoreCloud();}
+      else lgStatus("ログイン中："+lgUser.email+" ／ 編集内容は自動クラウド保存されます");
+    }}catch(e){lgStatus("ログインしましたがバックアップ確認に失敗："+(e.message||e));}}
+  }
+  document.getElementById("signInBtn").addEventListener("click",async()=>{
+    const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
+    if(!email||!password){lgStatus("メールとパスワードを入力してください。");return;}
+    try{const {error}=await lgSupabase.auth.signInWithPassword({email,password});if(error)throw error;await lgAfterLogin();}
+    catch(e){lgStatus("ログインできません："+(e.message||e));}
+  });
+  document.getElementById("signUpBtn").addEventListener("click",async()=>{
+    const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
+    if(!email||password.length<6){lgStatus("メールを入力し、パスワードは6文字以上にしてください。");return;}
+    try{const {data,error}=await lgSupabase.auth.signUp({email,password});if(error)throw error;
+      if(data.session){await lgAfterLogin();lgStatus("登録・ログイン完了。クラウド保存を開始できます。");}
+      else lgStatus("登録受付完了。確認メールのリンクを開いてからログインしてください。メールが届かない場合はSupabase側のメール確認設定を見直します。");
+    }catch(e){lgStatus("新規登録できません："+(e.message||e));}
+  });
+  document.getElementById("signOutBtn").addEventListener("click",async()=>{try{await lgSupabase.auth.signOut();lgUser=null;lgAccountUi();}catch(e){lgStatus("ログアウト失敗："+(e.message||e));}});
+  document.getElementById("cloudSaveBtn").addEventListener("click",async()=>{try{await lgSaveCloud(true);}catch(e){lgStatus("クラウド保存に失敗："+(e.message||e));}});
+  document.getElementById("cloudLoadBtn").addEventListener("click",async()=>{try{await lgRestoreCloud();}catch(e){lgStatus("復元に失敗："+(e.message||e));}});
+  if(lgSupabase){lgSupabase.auth.onAuthStateChange((_event,session)=>{lgUser=session?.user||null;lgAccountUi();}); lgAfterLogin();}
+  // Debounced automatic cloud backup whenever one of the app's three stores is updated.
+  const lgOriginalSetItem=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=function(key,value){lgOriginalSetItem(key,value);if([KEY,TIMETABLE_KEY,TASK_DAY_KEY].includes(key)&&lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}};
+
+  load();
+  loadTaskDay();
+  loadTimetable();
+  renderTaskDay();
+  renderHome();
+  renderTimetable();
+  setAppPage("timetable");
+})();
+</script>
+</body>
+</html>
