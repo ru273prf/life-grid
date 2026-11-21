@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<title>LIFE GRID v33</title>
+<title>LIFE GRID</title>
 <style>
 :root{color-scheme:light;--black:#111;--gray:#777;--line:#e7e7e7;--light:#f5f5f5}
 *{box-sizing:border-box;color-scheme:light}
@@ -253,33 +253,100 @@ input,textarea,select{font-size:16px!important;}
 .account-box button{padding:9px 12px;font-size:12px;min-height:38px}
 @media(max-width:640px){.account-box{display:grid;grid-template-columns:1fr 1fr}.account-box input{grid-column:span 2}.account-box .account-status{grid-column:span 2}.account-box button{width:100%}}
 
+
+
+/* v39: cleaner signed-in screen and compact, touch-first mobile layout */
+header{position:relative;align-items:center;}
+.settings-toggle{flex:0 0 40px;width:40px;height:40px;padding:0;border:1px solid #e5e5e5;border-radius:10px;background:#fff;color:#222;font-size:24px;line-height:1;}
+.quick-settings-panel{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:60;width:min(430px,calc(100vw - 24px));max-height:min(76dvh,680px);overflow:auto;padding:12px;background:#fff;border:1px solid #e7e7e7;border-radius:14px;box-shadow:0 14px 42px #0002;overscroll-behavior:contain;}
+.quick-settings-panel.open{display:block;}
+.quick-settings-panel .account-box{margin:0 0 10px;padding:0;border:0;border-radius:0;}
+.quick-settings-panel .data-tools{margin:8px 0 0;padding-top:10px;border-top:1px solid #eee;display:flex;gap:8px;}
+.quick-settings-panel .data-tools button{flex:1;}
+#cloudSaveBtn,#cloudLoadBtn{display:none!important;}
+.account-box .account-status{overflow-wrap:anywhere;}
+/* Avoid opening the software keyboard automatically when a mobile dialog appears. */
+html{touch-action:pan-x pan-y;}
+input,textarea,select{font-size:16px!important;}
+@media(max-width:640px){
+  html,body{width:100%;overflow-x:hidden;scroll-behavior:auto;}
+  .wrap{padding:0 10px max(18px,env(safe-area-inset-bottom));}
+  header{position:sticky;top:0;z-index:30;display:flex;flex-direction:row;align-items:center;gap:7px;margin:0 -10px 10px;padding: max(6px,env(safe-area-inset-top)) 10px 7px;background:rgba(255,255,255,.96);}
+  .page-switcher{flex:1;min-width:0;width:auto;gap:5px;padding:3px 0 6px;border:0;}
+  .page-tab{min-width:0;min-height:39px;padding:6px 3px;font-size:11px;}
+  .settings-toggle{width:36px;height:36px;flex-basis:36px;font-size:22px;}
+  .quick-settings-panel{position:fixed;top:calc(env(safe-area-inset-top) + 54px);left:10px;right:10px;width:auto;max-height:70dvh;margin:0;padding:13px;}
+  .quick-settings-panel .account-box{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .quick-settings-panel .account-box input{grid-column:span 2;width:100%;min-height:42px;}
+  .quick-settings-panel .account-box button{width:100%;min-height:40px;}
+  .quick-settings-panel .account-box .account-status{grid-column:span 2;}
+  .quick-settings-panel .data-tools{margin:8px 0 0;}
+  .eyebrow{margin:5px 0 8px;font-size:10px;}
+  .page-title-row{margin:2px 0 12px;}
+  .timetable-scroll{width:100%;overflow-x:hidden;padding:0;}
+  .timetable-grid{width:100%;min-width:0;grid-template-columns:clamp(27px,8vw,32px) repeat(5,minmax(0,1fr));grid-template-rows:34px repeat(6,minmax(54px,58px));gap:1px;}
+  .timetable-corner,.timetable-day,.timetable-period,.timetable-cell{min-width:0;}
+  .timetable-day{padding:3px 1px;font-size:clamp(10px,2.8vw,12px);}
+  .timetable-period{font-size:10px;white-space:nowrap;}
+  .timetable-cell{min-height:54px;height:100%;padding:3px 2px;font-size:clamp(9px,2.6vw,11px);line-height:1.25;overflow-wrap:anywhere;word-break:break-word;}
+  .task-list{padding-bottom:76px;}
+  .task-item{min-height:56px;padding:7px 1px;gap:10px;}
+  .task-check,.task-completed-mark{width:26px;height:26px;min-width:26px;}
+  .task-name-button{min-height:38px;font-size:14px;}
+  .task-deadline{font-size:10px;}
+  .cards{gap:7px;}
+  .card{padding:11px;}
+  .card-name{font-size:15px;}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .tile{min-height:88px;padding:7px 6px;}
+  .tile-title{font-size:11px;}
+  .sheet-head{margin-bottom:12px;}
+  .sheet-head h1{font-size:24px;}
+  .actions{gap:6px;}
+  .actions button{min-height:40px;padding:8px 9px;font-size:12px;}
+  .modal-backdrop{align-items:flex-end;padding:0;overscroll-behavior:contain;}
+  .modal{width:100%;max-width:none;max-height:calc(var(--lg-visual-height, 100dvh) - env(safe-area-inset-top) - 8px);border-radius:16px 16px 0 0;padding:17px 15px calc(14px + env(safe-area-inset-bottom));overflow-y:auto;}
+  .modal input,.modal textarea,.modal select{font-size:16px!important;min-height:42px;}
+  .modal textarea{min-height:84px;}
+}
+@media(max-width:360px){
+  .page-tab{font-size:10px;padding-left:2px;padding-right:2px;}
+  .timetable-grid{grid-template-columns:26px repeat(5,minmax(0,1fr));grid-template-rows:32px repeat(6,minmax(50px,54px));}
+  .timetable-day{font-size:10px;}
+  .timetable-cell{font-size:9px;padding:2px 1px;}
+}
+@media(prefers-reduced-motion:reduce){.quick-settings-panel{scroll-behavior:auto;}}
+
 </style>
-<!-- LIFE GRID v37 mobile session/reload fix -->
+<!-- LIFE GRID v39 mobile UX refinement -->
 </head>
 <body>
 <div class="wrap">
-  <section class="account-box" aria-label="クラウド保存アカウント">
-    <input id="accountEmail" type="email" autocomplete="email" placeholder="メールアドレス">
-    <input id="accountPassword" type="password" autocomplete="current-password" placeholder="パスワード（6文字以上）">
-    <button type="button" id="signInBtn">ログイン</button>
-    <button type="button" class="light" id="signUpBtn">新規登録</button>
-    <button type="button" class="light" id="resetPasswordBtn">パスワードを忘れた</button>
-    <div id="recoveryPanel" style="display:none;flex-basis:100%;padding:10px;border:1px solid #ddd;border-radius:10px"><strong>新しいパスワード</strong><input id="newPassword" type="password" autocomplete="new-password" placeholder="新しいパスワード（6文字以上）" style="width:100%;margin:8px 0"><button type="button" id="updatePasswordBtn">パスワードを更新</button><button type="button" class="light" id="cancelRecoveryBtn">キャンセル</button></div>
-    <button type="button" class="light" id="cloudSaveBtn">クラウド保存</button>
-    <button type="button" class="light" id="cloudLoadBtn">クラウド復元</button>
-    <button type="button" class="light" id="signOutBtn" style="display:none">ログアウト</button>
-    <div class="account-status" id="accountStatus">クラウド保存：未ログイン（データはこの端末内に保存されています）</div>
-  </section>
   <header>
     <nav class="page-switcher" aria-label="ページ切り替え">
       <button type="button" class="page-tab active" id="navTimetable">時間割</button>
       <button type="button" class="page-tab" id="navTaskDay">TASK DAY</button>
       <button type="button" class="page-tab" id="navLifeGrid">LIFE GRID</button>
     </nav>
-    <div class="data-tools">
-      <button type="button" class="light" id="exportBackupButton">データを書き出す</button>
-      <button type="button" class="light" id="importBackupButton">復元</button>
-      <input type="file" id="importBackupFile" accept="application/json,.json" hidden>
+    <button type="button" class="settings-toggle" id="settingsToggle" aria-label="アカウントとバックアップ" aria-expanded="false" title="設定">⋯</button>
+    <div class="quick-settings-panel" id="quickSettingsPanel" aria-label="アカウントとバックアップ">
+      <section class="account-box" aria-label="クラウド保存アカウント">
+        <input id="accountEmail" type="email" autocomplete="email" placeholder="メールアドレス">
+        <input id="accountPassword" type="password" autocomplete="current-password" placeholder="パスワード（6文字以上）">
+        <button type="button" id="signInBtn">ログイン</button>
+        <button type="button" class="light" id="signUpBtn">新規登録</button>
+        <button type="button" class="light" id="resetPasswordBtn">パスワードを忘れた</button>
+        <div id="recoveryPanel" style="display:none;flex-basis:100%;padding:10px;border:1px solid #ddd;border-radius:10px"><strong>新しいパスワード</strong><input id="newPassword" type="password" autocomplete="new-password" placeholder="新しいパスワード（6文字以上）" style="width:100%;margin:8px 0"><button type="button" id="updatePasswordBtn">パスワードを更新</button><button type="button" class="light" id="cancelRecoveryBtn">キャンセル</button></div>
+        <button type="button" class="light" id="cloudSaveBtn">クラウド保存</button>
+        <button type="button" class="light" id="cloudLoadBtn">クラウド復元</button>
+        <button type="button" class="light" id="signOutBtn" style="display:none">ログアウト</button>
+        <div class="account-status" id="accountStatus">クラウド保存：未ログイン（データはこの端末内に保存されています）</div>
+      </section>
+      <div class="data-tools">
+        <button type="button" class="light" id="exportBackupButton">データを書き出す</button>
+        <button type="button" class="light" id="importBackupButton">復元</button>
+        <input type="file" id="importBackupFile" accept="application/json,.json" hidden>
+      </div>
     </div>
   </header>
 
@@ -668,7 +735,7 @@ input,textarea,select{font-size:16px!important;}
     var pickerContainer=$("taskDifficultyPicker");
     pickerContainer.innerHTML="";
     taskEditorDifficulty=createDifficultyPicker(pickerContainer,task?task.priority:3,null);
-    setTimeout(function(){$("taskTitleInput").focus();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){$("taskTitleInput").focus();}},0);
   }
   function closeTaskEditor(){
     $("taskEditorBackdrop").classList.remove("open");
@@ -858,7 +925,7 @@ input,textarea,select{font-size:16px!important;}
     $("timetableActionTitle").textContent=cell.subject;
     $("timetableMemo").value=cell.note||"";
     $("timetableActionBackdrop").classList.add("open");
-    setTimeout(function(){$("timetableMemo").focus();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){$("timetableMemo").focus();}},0);
   }
   function closeTimetableAction(){
     $("timetableActionBackdrop").classList.remove("open");
@@ -890,8 +957,7 @@ input,textarea,select{font-size:16px!important;}
     $("timetableEditDelete").hidden=!registered;
     $("timetableEditBackdrop").classList.add("open");
     setTimeout(function(){
-      $("timetableSubjectInput").focus();
-      $("timetableSubjectInput").select();
+      if(window.matchMedia("(min-width:641px)").matches){$("timetableSubjectInput").focus();$("timetableSubjectInput").select();}
     },0);
   }
   function closeTimetableEditor(){
@@ -1228,7 +1294,7 @@ input,textarea,select{font-size:16px!important;}
     goalButtonAction=null;
     activeEditingGoal=null;
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){input.focus();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){input.focus();}},0);
   }
   function openCompletionModal(goal){
     $("modalTitle").textContent="達成を記録";
@@ -1264,7 +1330,7 @@ input,textarea,select{font-size:16px!important;}
       return true;
     };
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){dateInput.focus();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){dateInput.focus();}},0);
   }
   function openGoalDetails(goal){
     $("modalTitle").textContent=goal.title;
@@ -1377,7 +1443,7 @@ input,textarea,select{font-size:16px!important;}
       return false;
     };
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){titleInput.focus();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){titleInput.focus();}},0);
   }
   function showGoalDeleteConfirmation(goal){
     pendingDeleteGoal=goal;
@@ -1548,7 +1614,7 @@ input,textarea,select{font-size:16px!important;}
     };
 
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){titleInput.focus();titleInput.select();},0);
+    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){titleInput.focus();titleInput.select();}},0);
   }
 
   function showRevertConfirmation(goal){
@@ -1904,6 +1970,16 @@ input,textarea,select{font-size:16px!important;}
   let lgLastSyncedStoresJson = null;
   let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false, lgAfterLoginRunning = false;
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
+  const lgSettingsToggle=document.getElementById("settingsToggle");
+  const lgSettingsPanel=document.getElementById("quickSettingsPanel");
+  function lgSetSettingsOpen(open){
+    lgSettingsPanel.classList.toggle("open",!!open);
+    lgSettingsToggle.setAttribute("aria-expanded",open?"true":"false");
+  }
+  lgSettingsToggle.addEventListener("click",()=>lgSetSettingsOpen(!lgSettingsPanel.classList.contains("open")));
+  document.addEventListener("click",(event)=>{
+    if(!lgSettingsPanel.contains(event.target)&&!lgSettingsToggle.contains(event.target)) lgSetSettingsOpen(false);
+  });
   try {
     if(!window.supabase || typeof window.supabase.createClient !== "function") {
       throw new Error("Supabaseライブラリを読み込めませんでした。通信環境またはCDNへの接続を確認してください。");
@@ -1943,6 +2019,9 @@ input,textarea,select{font-size:16px!important;}
     const signIn=document.getElementById("signInBtn");
     const signUp=document.getElementById("signUpBtn");
     const signOut=document.getElementById("signOutBtn");
+    const emailInput=document.getElementById("accountEmail");
+    const passwordInput=document.getElementById("accountPassword");
+    const resetButton=document.getElementById("resetPasswordBtn");
     if(!lgAuthReady){
       signIn.style.display="none";
       signUp.style.display="none";
@@ -1954,6 +2033,9 @@ input,textarea,select{font-size:16px!important;}
     signIn.style.display=logged?"none":"";
     signUp.style.display=logged?"none":"";
     signOut.style.display=logged?"":"none";
+    emailInput.style.display=logged?"none":"";
+    passwordInput.style.display=logged?"none":"";
+    resetButton.style.display=logged?"none":"";
     if(logged) lgStatus("ログイン中："+lgUser.email+" ／ 自動同期中");
     else lgStatus("ログアウト中（端末の表示は初期状態です）");
   }
@@ -2111,6 +2193,7 @@ input,textarea,select{font-size:16px!important;}
       lgUser=session?.user||null;
       lgAccountUi();
       if(!lgUser){lgStopPolling();return;}
+      lgSetSettingsOpen(false);
       try{
         const record=await lgGetBackup();
         const local=buildBackupPayload();
@@ -2145,7 +2228,7 @@ input,textarea,select{font-size:16px!important;}
   }
 
   const recoveryPanel=document.getElementById("recoveryPanel");
-  function lgShowRecovery(){recoveryPanel.style.display="block";lgStatus("新しいパスワードを入力してください。");}
+  function lgShowRecovery(){lgSetSettingsOpen(true);recoveryPanel.style.display="block";lgStatus("新しいパスワードを入力してください。");}
   document.getElementById("resetPasswordBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim();
     if(!email){lgStatus("先にメールアドレスを入力してください。");return;}
@@ -2162,14 +2245,14 @@ input,textarea,select{font-size:16px!important;}
   document.getElementById("signInBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||!password){lgStatus("メールとパスワードを入力してください。");return;}
-    try{const {error}=await lgRequireSupabase().auth.signInWithPassword({email,password});if(error)throw error;await lgAfterLogin();}
+    try{const {error}=await lgRequireSupabase().auth.signInWithPassword({email,password});if(error)throw error;await lgAfterLogin();lgSetSettingsOpen(false);}
     catch(e){lgStatus("ログインできません："+(e.message||e));}
   });
   document.getElementById("signUpBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||password.length<6){lgStatus("メールを入力し、パスワードは6文字以上にしてください。");return;}
     try{const {data,error}=await lgRequireSupabase().auth.signUp({email,password});if(error)throw error;
-      if(data.session){await lgAfterLogin();lgStatus("登録・ログイン完了。クラウド同期を開始しました。");}
+      if(data.session){await lgAfterLogin();lgSetSettingsOpen(false);lgStatus("登録・ログイン完了。クラウド同期を開始しました。");}
       else lgStatus("登録受付完了。確認メールのリンクを開いてからログインしてください。");
     }catch(e){lgStatus("新規登録できません："+(e.message||e));}
   });
@@ -2219,6 +2302,18 @@ input,textarea,select{font-size:16px!important;}
       if(lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}
     }
   };
+  function lgUpdateVisualHeight(){
+    const height=window.visualViewport?window.visualViewport.height:window.innerHeight;
+    document.documentElement.style.setProperty("--lg-visual-height",Math.round(height)+"px");
+  }
+  lgUpdateVisualHeight();
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize",lgUpdateVisualHeight);
+    window.visualViewport.addEventListener("scroll",lgUpdateVisualHeight);
+  }
+  window.addEventListener("resize",lgUpdateVisualHeight);
+  // Keep mobile taps from triggering browser double-tap zoom in older iOS versions.
+  document.addEventListener("gesturestart",event=>event.preventDefault(),{passive:false});
   window.addEventListener("focus",()=>{if(lgUser)lgCheckForRemoteChanges().catch(()=>{});});
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&lgUser)lgCheckForRemoteChanges().catch(()=>{});});
 
