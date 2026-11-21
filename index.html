@@ -1891,14 +1891,30 @@ input,textarea,select{font-size:16px!important;}
   // v33: automatic account-based sync. Cloud/local conflicts are resolved by
   // last-modified timestamp; the cloud is the source of truth when timestamps tie.
   // Logging out first flushes pending changes, then clears this browser's app data.
+  // Supabase project credentials (publishable/anon key; safe for browser use with RLS enabled).
+  const LG_SUPABASE_URL = "https://ezdkpdthcchlqjfrncqk.supabase.co";
+  const LG_SUPABASE_ANON_KEY = "sb_publishable__Nkl15LlN2BIPkdqxFxHpw_LF3UqBV5";
   const LG_LOCAL_UPDATED_KEY = "life-grid-local-updated-at-v1";
   const lgOriginalSetItem = localStorage.setItem.bind(localStorage);
   let lgSupabase = null, lgUser = null, lgSyncTimer = null, lgPollTimer = null;
   let lgLastCloudUpdatedAt = null, lgLocalDirty = false, lgLocalChangeSeq = 0;
   let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false, lgAfterLoginRunning = false;
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
-  try { if(window.supabase && window.supabase.createClient) lgSupabase=window.supabase.createClient(LG_SUPABASE_URL,LG_SUPABASE_ANON_KEY); }
-  catch(err){ lgStatus("Supabase接続の初期化に失敗しました。ネット接続を確認してください。"); }
+  try {
+    if(!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("Supabaseライブラリを読み込めませんでした。通信環境またはCDNへの接続を確認してください。");
+    }
+    lgSupabase = window.supabase.createClient(LG_SUPABASE_URL, LG_SUPABASE_ANON_KEY);
+  } catch(err) {
+    lgSupabase = null;
+    lgStatus("Supabase初期化エラー：" + (err.message || err));
+  }
+  function lgRequireSupabase(){
+    if(!lgSupabase || !lgSupabase.auth) {
+      throw new Error("Supabaseに接続できていません。ページを再読み込みして、接続を確認してください。");
+    }
+    return lgSupabase;
+  }
 
   function lgReadLocalUpdatedAt(){
     try{return localStorage.getItem(LG_LOCAL_UPDATED_KEY)||null;}catch(_){return null;}
@@ -2009,7 +2025,7 @@ input,textarea,select{font-size:16px!important;}
     if(lgAfterLoginRunning) return;
     lgAfterLoginRunning=true;
     try {
-      const {data:{session}}=await lgSupabase.auth.getSession();
+      const {data:{session}}=await lgRequireSupabase().auth.getSession();
       lgUser=session?.user||null;
       lgAccountUi();
       if(!lgUser){lgStopPolling();return;}
@@ -2051,26 +2067,26 @@ input,textarea,select{font-size:16px!important;}
   document.getElementById("resetPasswordBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim();
     if(!email){lgStatus("先にメールアドレスを入力してください。");return;}
-    try{const {error}=await lgSupabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;lgStatus("リセットメールを送信しました。メール内リンクを開いて、このページで新しいパスワードを設定してください。");}
+    try{const {error}=await lgRequireSupabase().auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;lgStatus("リセットメールを送信しました。メール内リンクを開いて、このページで新しいパスワードを設定してください。");}
     catch(e){lgStatus("リセットメール送信に失敗："+(e.message||e));}
   });
   document.getElementById("updatePasswordBtn").addEventListener("click",async()=>{
     const password=document.getElementById("newPassword").value;
     if(password.length<6){lgStatus("新しいパスワードは6文字以上にしてください。");return;}
-    try{const {error}=await lgSupabase.auth.updateUser({password});if(error)throw error;recoveryPanel.style.display="none";document.getElementById("newPassword").value="";lgStatus("パスワードを更新しました。新しいパスワードでログインできます。");}
+    try{const {error}=await lgRequireSupabase().auth.updateUser({password});if(error)throw error;recoveryPanel.style.display="none";document.getElementById("newPassword").value="";lgStatus("パスワードを更新しました。新しいパスワードでログインできます。");}
     catch(e){lgStatus("更新に失敗："+(e.message||e));}
   });
   document.getElementById("cancelRecoveryBtn").addEventListener("click",()=>{recoveryPanel.style.display="none";});
   document.getElementById("signInBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||!password){lgStatus("メールとパスワードを入力してください。");return;}
-    try{const {error}=await lgSupabase.auth.signInWithPassword({email,password});if(error)throw error;await lgAfterLogin();}
+    try{const {error}=await lgRequireSupabase().auth.signInWithPassword({email,password});if(error)throw error;await lgAfterLogin();}
     catch(e){lgStatus("ログインできません："+(e.message||e));}
   });
   document.getElementById("signUpBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||password.length<6){lgStatus("メールを入力し、パスワードは6文字以上にしてください。");return;}
-    try{const {data,error}=await lgSupabase.auth.signUp({email,password});if(error)throw error;
+    try{const {data,error}=await lgRequireSupabase().auth.signUp({email,password});if(error)throw error;
       if(data.session){await lgAfterLogin();lgStatus("登録・ログイン完了。クラウド同期を開始しました。");}
       else lgStatus("登録受付完了。確認メールのリンクを開いてからログインしてください。");
     }catch(e){lgStatus("新規登録できません："+(e.message||e));}
@@ -2080,7 +2096,7 @@ input,textarea,select{font-size:16px!important;}
       // Finish any pending local changes before ending the session.
       clearTimeout(lgSyncTimer);
       if(lgLocalDirty) await lgSaveCloud(false);
-      await lgSupabase.auth.signOut();
+      await lgRequireSupabase().auth.signOut();
       lgUser=null;lgLastCloudUpdatedAt=null;lgLocalDirty=false;
       lgStopPolling();
       // Keep Supabase's own auth storage alone; clear only LIFE GRID's three app stores.
@@ -2101,7 +2117,7 @@ input,textarea,select{font-size:16px!important;}
       .some(k => lgQueryParams.has(k) || lgHashParams.has(k));
     const lgIsRecoveryLink = lgRecoveryType === "recovery" ||
       (lgRecoveryTokenPresent && /recovery/i.test(location.href));
-    lgSupabase.auth.onAuthStateChange((event,session)=>{
+    lgRequireSupabase().auth.onAuthStateChange((event,session)=>{
       lgUser=session?.user||null;
       lgAccountUi();
       if(event === "PASSWORD_RECOVERY") lgShowRecovery();
