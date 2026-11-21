@@ -1063,7 +1063,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     var pickerContainer=$("taskDifficultyPicker");
     pickerContainer.innerHTML="";
     taskEditorDifficulty=createDifficultyPicker(pickerContainer,task?task.priority:3,null);
-    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){$("taskTitleInput").focus();}},0);
+    $("taskTitleInput").focus();setTimeout(function(){$("taskTitleInput").focus();},50);
   }
   function closeTaskEditor(){
     $("taskEditorBackdrop").classList.remove("open");
@@ -1632,7 +1632,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     goalButtonAction=null;
     activeEditingGoal=null;
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){input.focus();}},0);
+    input.focus();setTimeout(function(){input.focus();},50);
   }
   function openCompletionModal(goal){
     $("modalTitle").textContent="達成を記録";
@@ -1668,7 +1668,7 @@ button,a{-webkit-user-select:none;user-select:none;}
       return true;
     };
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){dateInput.focus();}},0);
+    noteInput.focus();setTimeout(function(){noteInput.focus();},50);
   }
   function openGoalDetails(goal){
     $("modalTitle").textContent=goal.title;
@@ -1781,7 +1781,7 @@ button,a{-webkit-user-select:none;user-select:none;}
       return false;
     };
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){titleInput.focus();}},0);
+    titleInput.focus();setTimeout(function(){titleInput.focus();},50);
   }
   function showGoalDeleteConfirmation(goal){
     pendingDeleteGoal=goal;
@@ -1952,7 +1952,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     };
 
     $("modalBackdrop").classList.add("open");
-    setTimeout(function(){if(window.matchMedia("(min-width:641px)").matches){titleInput.focus();titleInput.select();}},0);
+    titleInput.focus();titleInput.select();setTimeout(function(){titleInput.focus();titleInput.select();},50);
   }
 
   function showRevertConfirmation(goal){
@@ -2102,13 +2102,34 @@ button,a{-webkit-user-select:none;user-select:none;}
   function everySetPage(calendar){$("everyRail").style.transform=calendar?"translateX(-50%)":"translateX(0)";$("everyTodayActions").style.display=calendar?"none":"flex";$("everyTodayTab").classList.toggle("active",!calendar);$("everyCalendarTab").classList.toggle("active",calendar);if(!calendar){everyState.month=new Date(everyToday.getFullYear(),everyToday.getMonth(),1);everyState.selected=everyKey(everyToday);everyState.detailOpen=true;$("everyDetails").classList.add("open");$("everyDetailsToggle").textContent="";everyRenderToday();everyRenderCalendar();}}
   function everyBuildDays(){var box=$("everyDayButtons");box.innerHTML="";EVERY_DAYS.forEach((day,i)=>{var b=document.createElement("button");b.type="button";b.className="every-day-btn"+(everyState.chosenDays.includes(i)?" active":"");b.textContent=day;b.onclick=()=>{everyState.chosenDays=everyState.chosenDays.includes(i)?everyState.chosenDays.filter(x=>x!==i):everyState.chosenDays.concat(i);everyBuildDays();};box.append(b);});}
   function everyCurrent(lineage){return everyVersion(lineage,everyKey(everyToday));}
-  function everyOpenHabit(id=null){everyState.editVersionId=id;everyState.chosenDays=id===null?[0,1,2,3,4,5,6]:everyCurrent(id)?[...everyCurrent(id).days]:[];$ ("everyHabitName").value=id===null?"":everyCurrent(id)?.name||"";$("everyHabitModalTitle").textContent=id===null?"Add habit":"Edit habit";$("everyHabitDelete").hidden=id===null;everyBuildDays();$("everyHabitBackdrop").classList.add("open");}
+  function everyOpenHabit(id=null){everyState.editVersionId=id;everyState.chosenDays=id===null?[0,1,2,3,4,5,6]:everyCurrent(id)?[...everyCurrent(id).days]:[];$ ("everyHabitName").value=id===null?"":everyCurrent(id)?.name||"";$("everyHabitModalTitle").textContent=id===null?"Add habit":"Edit habit";$("everyHabitDelete").hidden=id===null;everyBuildDays();$("everyHabitBackdrop").classList.add("open");$("everyHabitName").focus();setTimeout(function(){$("everyHabitName").focus();},50);}
   function everyCloseHabit(){$("everyHabitBackdrop").classList.remove("open");}
   function everySaveHabit(){var name=$("everyHabitName").value.trim(),days=everyState.chosenDays.slice().sort((a,b)=>a-b);if(!name){alert("習慣名を入力してください。");return;}if(!days.length){alert("実施曜日を1日以上選択してください。");return;}var todayKey=everyKey(everyToday),lineage=everyState.editVersionId;if(lineage!==null){var old=everyCurrent(lineage);if(!old){alert("編集対象が見つかりません。");return;}old.to=everyKey(new Date(everyToday.getTime()-86400000));everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}else{lineage=everyState.nextId++;everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();}
   function everyDeleteHabit(){var id=everyState.editVersionId;if(id===null)return;if(!confirm("この習慣を今日以降の予定から削除しますか？過去の記録は保持されます。"))return;var old=everyCurrent(id);if(old)old.to=everyKey(new Date(everyToday.getTime()-86400000));everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();$("everyEditBackdrop").classList.add("open");everyRenderEditList();}
   function everyRenderEditList(){var list=$("everyEditList");list.innerHTML="";var ids=[...new Set(everyState.versions.map(v=>v.lineage))];ids.forEach(id=>{var v=everyCurrent(id);if(!v)return;var row=document.createElement("button");row.type="button";row.className="every-edit-row light";row.textContent=v.name;row.onclick=()=>{$("everyEditBackdrop").classList.remove("open");everyOpenHabit(id);};list.append(row);});if(!list.children.length){var e=document.createElement("div");e.className="every-empty";e.textContent="習慣がありません。＋から追加してください。";list.append(e);}}
   function everyInit(){everyLoad();everyRenderToday();everyRenderCalendar();$("everyAddButton").onclick=()=>everyOpenHabit();$("everyEditButton").onclick=()=>{everyRenderEditList();$("everyEditBackdrop").classList.add("open");};$("everyHabitCancel").onclick=everyCloseHabit;$("everyHabitSave").onclick=everySaveHabit;$("everyHabitDelete").onclick=everyDeleteHabit;$("everyEditDone").onclick=()=>$("everyEditBackdrop").classList.remove("open");$("everyTodayTab").onclick=()=>everySetPage(false);$("everyCalendarTab").onclick=()=>everySetPage(true);$("everyPrev").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()-1,1);everyRenderCalendar();};$("everyNext").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()+1,1);everyRenderCalendar();};$("everyDetailsToggle").onclick=null;$("everyDetails").classList.add("open");var x0=0,view=$("everyViewport");view.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;},{passive:true});view.addEventListener("touchend",e=>{var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>55)everySetPage(dx<0);},{passive:true});view.addEventListener("mousedown",e=>x0=e.clientX);view.addEventListener("mouseup",e=>{var dx=e.clientX-x0;if(Math.abs(dx)>80)everySetPage(dx<0);});$("everyHabitName").addEventListener("keydown",e=>{if(e.key==="Enter")everySaveHabit();});$("everyHabitBackdrop").addEventListener("click",e=>{if(e.target===$("everyHabitBackdrop"))everyCloseHabit();});$("everyEditBackdrop").addEventListener("click",e=>{if(e.target===$("everyEditBackdrop"))$("everyEditBackdrop").classList.remove("open");});}
   everyInit();
+
+  // v48: swipe between primary app pages (not the internal horizontal item/habit rails).
+  (function(){
+    var pageOrder=["timetable","every","taskday","lifegrid"],startX=0,startY=0,tracking=false;
+    var swipeRoot=document.querySelector("main");
+    swipeRoot.addEventListener("touchstart",function(e){
+      if(!e.touches||e.touches.length!==1)return;
+      var target=e.target;
+      if(target.closest(".task-page,.goal-page,.every-viewport,input,textarea,select,button,[contenteditable='true'],.modal-backdrop"))return;
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
+    },{passive:true});
+    swipeRoot.addEventListener("touchend",function(e){
+      if(!tracking||!e.changedTouches||!e.changedTouches.length)return;tracking=false;
+      var dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
+      if(Math.abs(dx)<65||Math.abs(dx)<Math.abs(dy)*1.25)return;
+      var idx=pageOrder.indexOf(currentAppPage);if(idx<0)return;
+      var next=idx+(dx<0?1:-1);if(next<0||next>=pageOrder.length)return;
+      setAppPage(pageOrder[next]);
+    },{passive:true});
+    swipeRoot.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
+  })();
 
   $("navLifeGrid").addEventListener("click",function(){setAppPage("lifegrid");});
   $("navTaskDay").addEventListener("click",function(){setAppPage("taskday");});
