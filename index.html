@@ -1888,8 +1888,9 @@ input,textarea,select{font-size:16px!important;}
     e.target.value="";
   });
 
-  // v35: automatic account-based sync with restored structural comparison helper. Cloud/local conflicts are resolved by
-  // last-modified timestamp; the cloud is the source of truth when timestamps tie.
+  // v36: automatic account-based cloud backup and cross-device sync.
+  // Compare actual store contents rather than client-device clocks; clock skew must not cause one device
+  // to overwrite a newer cloud backup with stale local data. Unsaved local edits are allowed to finish saving.
   // Logging out first flushes pending changes, then clears this browser's app data.
   // Supabase project credentials (publishable/anon key; safe for browser use with RLS enabled).
   const LG_SUPABASE_URL = "https://ezdkpdthcchlqjfrncqk.supabase.co";
@@ -2005,23 +2006,24 @@ input,textarea,select{font-size:16px!important;}
     lgPolling=true;
     try{
       const record=await lgGetBackup();
-      if(!record || !record.updated_at)return;
-      const remoteTime=Date.parse(record.updated_at);
-      if(!Number.isFinite(remoteTime))return;
-      const localTime=Date.parse(lgReadLocalUpdatedAt()||"");
-      const knownTime=Date.parse(lgLastCloudUpdatedAt||"");
-      if(Number.isFinite(knownTime) && remoteTime<=knownTime)return;
-      if(Number.isFinite(localTime) && localTime>remoteTime){
-        // This device has a later edit: publish it automatically.
-        await lgSaveCloud(false);
-      }else{
-        // Remote is newer, equal, or local has no timestamp: adopt the account copy.
-        if(!validateBackup(record.data)){lgStatus("クラウドバックアップの形式が不正です。同期を中止しました。");return;}
-        lgApplyCloudRecord(record);
+      if(!record)return;
+      if(!validateBackup(record.data)){
+        lgStatus("クラウドバックアップの形式が不正です。同期を中止しました。");
+        return;
       }
+      const localPayload=buildBackupPayload();
+      // Data comparison is authoritative. updated_at may come from different device clocks,
+      // so it is not safe to decide which copy wins by comparing local and cloud timestamps.
+      if(lgSameStores(localPayload.stores,record.data.stores)){
+        lgLastCloudUpdatedAt=record.updated_at||lgLastCloudUpdatedAt;
+        return;
+      }
+      // Never replace edits that have not finished uploading. The debounced save will publish them.
+      if(lgLocalDirty||lgSaveInFlight)return;
+      lgApplyCloudRecord(record);
     }finally{lgPolling=false;}
   }
-  // v35: restore the structural store comparison helper used during login sync.
+  // Stable structural comparison helper used by login and automatic sync.
   // Object keys are sorted so equivalent JSON data compares equal regardless of key order.
   function lgStableValue(value){
     if(Array.isArray(value)) return value.map(lgStableValue);
@@ -2055,19 +2057,18 @@ input,textarea,select{font-size:16px!important;}
           lgStatus("クラウドデータの形式が不正です。データ保護のため同期を停止しました。");
         }else{
           lgLastCloudUpdatedAt=record.updated_at||null;
-          const localStamp=Date.parse(lgReadLocalUpdatedAt()||"");
-          const remoteStamp=Date.parse(record.updated_at||"");
-          if(!Number.isFinite(localStamp) || (Number.isFinite(remoteStamp) && remoteStamp>=localStamp)){
-            // On a new device / first login, the account's cloud data wins automatically.
-            if(!lgSameStores(local.stores,record.data.stores)){
+          if(!lgSameStores(local.stores,record.data.stores)){
+            if(lgLocalDirty){
+              // Changes made on this device during login are uploaded; otherwise cloud is authoritative.
+              await lgSaveCloud(false);
+            }else{
+              // Existing account data is restored on this device without a confirmation prompt.
               lgApplyCloudRecord(record);
               return;
             }
+          }else{
             lgWriteLocalUpdatedAt(record.updated_at||new Date().toISOString());
             lgLocalDirty=false;
-          }else{
-            // This device has a later local edit; upload it automatically.
-            await lgSaveCloud(false);
           }
           lgStatus("ログイン中："+lgUser.email+" ／ 自動同期中");
         }
