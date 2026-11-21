@@ -1888,7 +1888,7 @@ input,textarea,select{font-size:16px!important;}
     e.target.value="";
   });
 
-  // v33: automatic account-based sync. Cloud/local conflicts are resolved by
+  // v35: automatic account-based sync with restored structural comparison helper. Cloud/local conflicts are resolved by
   // last-modified timestamp; the cloud is the source of truth when timestamps tie.
   // Logging out first flushes pending changes, then clears this browser's app data.
   // Supabase project credentials (publishable/anon key; safe for browser use with RLS enabled).
@@ -2021,6 +2021,22 @@ input,textarea,select{font-size:16px!important;}
       }
     }finally{lgPolling=false;}
   }
+  // v35: restore the structural store comparison helper used during login sync.
+  // Object keys are sorted so equivalent JSON data compares equal regardless of key order.
+  function lgStableValue(value){
+    if(Array.isArray(value)) return value.map(lgStableValue);
+    if(value && typeof value === "object"){
+      const out={};
+      Object.keys(value).sort().forEach(key=>{out[key]=lgStableValue(value[key]);});
+      return out;
+    }
+    return value;
+  }
+  function lgSameStores(a,b){
+    try{return JSON.stringify(lgStableValue(a))===JSON.stringify(lgStableValue(b));}
+    catch(_){return false;}
+  }
+
   async function lgAfterLogin(){
     if(lgAfterLoginRunning) return;
     lgAfterLoginRunning=true;
