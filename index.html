@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<meta name="life-grid-version" content="42">
+<meta name="life-grid-version" content="43">
 <meta name="color-scheme" content="light">
 <title>LIFE GRID</title>
 <style>
@@ -476,8 +476,34 @@ button,a{-webkit-user-select:none;user-select:none;}
   .sheet-options-menu{position:fixed;top:auto;right:auto;left:8px;min-width:150px;max-width:calc(100vw - 16px);z-index:100;}
 }
 
+
+
+/* v43: clearer page actions, undone-first LIFE GRID, and square timetable cells */
+.home-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;margin:4px 0 8px;}
+.home-heading .eyebrow{margin:0;}
+.round-add-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border:0;border-radius:50%;background:#111;color:#fff;font-size:27px;font-weight:300;line-height:1;box-shadow:0 2px 7px #0002;}
+#sheetCards .add-sheet{display:none!important;}
+@media(max-width:640px){
+  .home-heading{flex:0 0 43px;min-height:43px;margin:1px 0 5px;padding:0 1px;}
+  .home-heading .eyebrow{font-size:10px;margin:0;}
+  .round-add-button{flex-basis:40px;width:40px;height:40px;min-width:40px;min-height:40px;font-size:26px;}
+
+  /* Reserve a full row for TASK DAY controls, below the global navigation/settings row. */
+  #taskDayView.view.active{gap:5px;}
+  .task-day-heading{position:relative;inset:auto;display:flex;flex:0 0 46px;width:100%;height:46px;min-height:46px;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:0 3px;overflow:visible;}
+  .task-day-count{padding:0;line-height:1.2;}
+  .task-add-button{position:relative!important;inset:auto!important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;min-width:42px;min-height:42px;margin:0 1px 0 auto;padding:0;border:0;border-radius:50%;background:#111;color:#fff;font-size:27px;line-height:1;box-shadow:0 2px 7px #0002;z-index:1;}
+
+  /* Timetable: five weekday columns with near-square subject cells and no internal vertical scroll. */
+  #timetableView.view.active{align-items:stretch;justify-content:flex-start;}
+  .timetable-scroll{flex:0 0 auto;width:100%;height:auto;min-height:0;overflow:hidden;padding:0;}
+  .timetable-grid{width:100%;height:auto;min-width:0;align-content:start;grid-template-columns:clamp(27px,8vw,32px) repeat(5,minmax(0,1fr));grid-template-rows:32px repeat(6,clamp(54px,17vw,72px));gap:1px;}
+  .timetable-corner,.timetable-day,.timetable-period,.timetable-cell{min-width:0;}
+  .timetable-cell{height:100%;min-height:0;padding:3px 2px;font-size:clamp(9px,2.6vw,11px);line-height:1.2;}
+}
+
 </style>
-<!-- LIFE GRID v42 compact sheet picker and touch targets -->
+<!-- LIFE GRID v43 layout defaults -->
 </head>
 <body>
 <div class="wrap">
@@ -512,9 +538,12 @@ button,a{-webkit-user-select:none;user-select:none;}
   <main>
     <div id="lifeGridApp" class="view active">
     <section id="homeView" class="view active">
-      <p class="eyebrow">YOUR SHEETS</p>
+      <div class="home-heading">
+        <p class="eyebrow">YOUR SHEETS</p>
+        <button type="button" id="addSheetButton" class="round-add-button" aria-label="シートを追加">＋</button>
+      </div>
       <div id="sheetCards" class="cards"></div>
-      <p id="homeEmpty" class="empty">まだシートがありません。下の「＋ シート追加」から作成できます。</p>
+      <p id="homeEmpty" class="empty">まだシートがありません。右上の＋から作成できます。</p>
     </section>
 
     <section id="sheetView" class="view">
@@ -699,7 +728,7 @@ button,a{-webkit-user-select:none;user-select:none;}
   var suppressTimetableClickUntil = 0;
   var pendingResetWeekday = null;
   var activeSheetId = null;
-  var goalViewMode = "all";
+  var goalViewMode = "undone";
   var actionAfterSave = null;
   var cancelAction = null;
   var revertAction = null;
@@ -1315,16 +1344,12 @@ button,a{-webkit-user-select:none;user-select:none;}
       root.appendChild(card);
     });
 
-    var addCard=document.createElement("button");
-    addCard.type="button";
-    addCard.className="card add-sheet";
-    addCard.appendChild(textElement("span","add-circle-icon","＋"));
-    addCard.appendChild(textElement("span","add-sheet-label","シート追加"));
-    addCard.addEventListener("click",addSheet);
-    root.appendChild(addCard);
   }
   function openSheet(id){
-    activeSheetId=id; show("sheet"); renderSheet();
+    activeSheetId=id;
+    goalViewMode="undone";
+    show("sheet");
+    renderSheet();
   }
   function renderSheet(){
     var sheet=getActiveSheet(); if(!sheet){show("home");renderHome();return;}
@@ -1918,6 +1943,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     }
   }
 
+  $("addSheetButton").addEventListener("click",addSheet);
   $("addTaskButton").addEventListener("click",function(){openTaskEditor(null);});
   $("taskEditorCancel").addEventListener("click",closeTaskEditor);
   $("taskEditorSave").addEventListener("click",saveTaskEditor);
