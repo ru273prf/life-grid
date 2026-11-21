@@ -1888,53 +1888,136 @@ input,textarea,select{font-size:16px!important;}
     e.target.value="";
   });
 
-  // v27 cloud backup/auth using Supabase (user-scoped row protected by RLS)
+  // v31: local-first cloud backup + cross-device synchronization.
+  // Each account owns one row in public.life_grid_backups (protected by RLS).
   const LG_SUPABASE_URL = "https://ezdkpdthcchlqjfrncqk.supabase.co";
   const LG_SUPABASE_ANON_KEY = "sb_publishable__Nkl15LlN2BIPkdqxFxHpw_LF3UqBV5";
-  let lgSupabase = null, lgUser = null, lgSyncTimer = null;
+  let lgSupabase = null, lgUser = null, lgSyncTimer = null, lgPollTimer = null;
+  let lgLastCloudUpdatedAt = null, lgLocalDirty = false, lgLocalChangeSeq = 0;
+  let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false;
+  const lgOriginalSetItem = localStorage.setItem.bind(localStorage);
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
   try { if(window.supabase && window.supabase.createClient) lgSupabase=window.supabase.createClient(LG_SUPABASE_URL,LG_SUPABASE_ANON_KEY); }
   catch(err){ lgStatus("Supabase接続の初期化に失敗しました。ネット接続を確認してください。"); }
+
   function lgAccountUi(){
     const logged=!!lgUser;
     document.getElementById("signInBtn").style.display=logged?"none":"";
     document.getElementById("signUpBtn").style.display=logged?"none":"";
     document.getElementById("signOutBtn").style.display=logged?"":"none";
-    if(logged) lgStatus("ログイン中："+lgUser.email+" ／ 編集内容は自動クラウド保存されます");
+    if(logged) lgStatus("ログイン中："+lgUser.email+" ／ 変更は自動保存・他端末にも同期されます");
     else lgStatus("クラウド保存：未ログイン（データはこの端末内に保存されています）");
   }
   async function lgGetBackup(){
     if(!lgSupabase||!lgUser) throw new Error("ログインしてください。");
-    const {data,error}=await lgSupabase.from("life_grid_backups").select("data").eq("user_id",lgUser.id).maybeSingle();
-    if(error) throw error; return data?.data||null;
+    const {data,error}=await lgSupabase.from("life_grid_backups").select("data,updated_at").eq("user_id",lgUser.id).maybeSingle();
+    if(error) throw error;
+    return data || null;
+  }
+  function lgIsLocalDataEmpty(payload){
+    const st=payload && payload.stores;
+    if(!st) return true;
+    const hasGoals=(st.lifeGrid.sheets||[]).some(sh=>(sh.goals||[]).length>0 || !!(sh.name||"").trim());
+    const hasTimetable=(st.timetable||[]).some(c=>c && ((c.subject||"").trim() || (c.note||"").trim() || c.checked));
+    const hasTasks=(st.taskDay.active||[]).length>0 || (st.taskDay.completed||[]).length>0;
+    return !hasGoals && !hasTimetable && !hasTasks;
+  }
+  function lgApplyCloudRecord(record){
+    const payload=record && record.data;
+    if(!validateBackup(payload)){lgStatus("クラウドバックアップの形式が不正です。復元を中止しました。");return false;}
+    // Use the original setter so applying remote data does not trigger an upload loop.
+    lgOriginalSetItem(KEY,JSON.stringify(payload.stores.lifeGrid));
+    lgOriginalSetItem(TIMETABLE_KEY,JSON.stringify(payload.stores.timetable));
+    lgOriginalSetItem(TASK_DAY_KEY,JSON.stringify(payload.stores.taskDay));
+    lgLocalDirty=false;
+    lgLastCloudUpdatedAt=record.updated_at || new Date().toISOString();
+    lgStatus("別端末の最新データを受信しました。画面を更新します。");
+    location.reload();
+    return true;
   }
   async function lgSaveCloud(showMsg=true){
     if(!lgSupabase||!lgUser) {if(showMsg)lgStatus("クラウド保存するにはログインしてください。");return;}
-    const payload=buildBackupPayload();
-    const row={user_id:lgUser.id,data:payload,updated_at:new Date().toISOString()};
-    const {error}=await lgSupabase.from("life_grid_backups").upsert(row,{onConflict:"user_id"});
-    if(error) throw error;
-    if(showMsg)lgStatus("クラウド保存しました："+new Date().toLocaleTimeString());
+    if(lgSaveInFlight){lgSaveAgain=true;return;}
+    lgSaveInFlight=true;
+    try{
+      const saveSeq=lgLocalChangeSeq;
+      const payload=buildBackupPayload();
+      const stamp=new Date().toISOString();
+      const row={user_id:lgUser.id,data:payload,updated_at:stamp};
+      const {error}=await lgSupabase.from("life_grid_backups").upsert(row,{onConflict:"user_id"});
+      if(error) throw error;
+      lgLastCloudUpdatedAt=stamp;
+      if(saveSeq===lgLocalChangeSeq) lgLocalDirty=false;
+      if(showMsg)lgStatus("クラウドに保存しました："+new Date().toLocaleTimeString());
+      else if(!lgLocalDirty)lgStatus("ログイン中："+lgUser.email+" ／ クラウド同期済み（"+new Date().toLocaleTimeString()+"）");
+    } finally {
+      lgSaveInFlight=false;
+      if(lgSaveAgain){lgSaveAgain=false;clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),300);}
+    }
   }
   async function lgRestoreCloud(){
-    const payload=await lgGetBackup();
-    if(!payload){lgStatus("クラウド上にバックアップがありません。まず「クラウド保存」を押してください。");return;}
-    if(!validateBackup(payload)){lgStatus("クラウドバックアップの形式が不正です。復元を中止しました。");return;}
+    const record=await lgGetBackup();
+    if(!record){lgStatus("クラウド上にバックアップがありません。端末のデータを先にクラウド保存します。");await lgSaveCloud(true);return;}
+    if(!validateBackup(record.data)){lgStatus("クラウドバックアップの形式が不正です。復元を中止しました。");return;}
     if(!confirm("クラウドバックアップでこの端末のデータを置き換えます。現在のデータは先にファイルへバックアップします。復元しますか？"))return;
     downloadBackup();
-    localStorage.setItem(KEY,JSON.stringify(payload.stores.lifeGrid));
-    localStorage.setItem(TIMETABLE_KEY,JSON.stringify(payload.stores.timetable));
-    localStorage.setItem(TASK_DAY_KEY,JSON.stringify(payload.stores.taskDay));
-    lgStatus("クラウドから復元しました。再読み込みします。"); location.reload();
+    lgApplyCloudRecord(record);
+  }
+  function lgStartCloudPolling(){
+    if(lgPollTimer)clearInterval(lgPollTimer);
+    lgPollTimer=setInterval(()=>{
+      if(document.visibilityState==="visible") lgCheckForRemoteChanges().catch(e=>lgStatus("他端末との同期確認に失敗："+(e.message||e)));
+    },5000);
+  }
+  async function lgCheckForRemoteChanges(){
+    if(!lgSupabase||!lgUser||lgPolling)return;
+    lgPolling=true;
+    try{
+      const record=await lgGetBackup();
+      if(!record || !record.updated_at)return;
+      const remoteTime=Date.parse(record.updated_at);
+      const knownTime=Date.parse(lgLastCloudUpdatedAt||"");
+      if(!Number.isFinite(remoteTime) || (Number.isFinite(knownTime) && remoteTime<=knownTime))return;
+      if(lgLocalDirty){
+        const takeRemote=confirm("別の端末で新しいデータが保存されています。\nOK：別端末のデータをこの端末に反映\nキャンセル：この端末のデータを優先してクラウドに保存");
+        if(takeRemote) lgApplyCloudRecord(record);
+        else await lgSaveCloud(false);
+      }else{
+        lgApplyCloudRecord(record);
+      }
+    }finally{lgPolling=false;}
   }
   async function lgAfterLogin(){
-    const {data:{session}}=await lgSupabase.auth.getSession(); lgUser=session?.user||null; lgAccountUi();
-    if(lgUser){try{const cloud=await lgGetBackup(); if(cloud){
-      const local=buildBackupPayload(); const localEmpty=(local.stores.lifeGrid.sheets||[]).length===0 && local.stores.timetable.length===0 && local.stores.taskDay.active.length===0 && local.stores.taskDay.completed.length===0;
-      if(localEmpty && confirm("クラウドに以前のバックアップが見つかりました。今の端末に復元しますか？")){await lgRestoreCloud();}
-      else lgStatus("ログイン中："+lgUser.email+" ／ 編集内容は自動クラウド保存されます");
-    }}catch(e){lgStatus("ログインしましたがバックアップ確認に失敗："+(e.message||e));}}
+    const {data:{session}}=await lgSupabase.auth.getSession();
+    lgUser=session?.user||null;
+    lgAccountUi();
+    if(!lgUser){if(lgPollTimer)clearInterval(lgPollTimer);lgPollTimer=null;return;}
+    try{
+      const record=await lgGetBackup();
+      const local=buildBackupPayload();
+      if(!record){
+        await lgSaveCloud(false);
+        lgStatus("初回クラウド保存が完了しました。以後、編集内容は自動同期されます。");
+      }else if(!validateBackup(record.data)){
+        lgStatus("ログイン済みですが、クラウドデータの形式を確認できません。手動で上書きせず確認してください。");
+      }else{
+        lgLastCloudUpdatedAt=record.updated_at||null;
+        if(lgIsLocalDataEmpty(local)){
+          lgApplyCloudRecord(record);
+          return;
+        }
+        const same=JSON.stringify(local.stores)===JSON.stringify(record.data.stores);
+        if(!same){
+          const useCloud=confirm("このアカウントには別の端末のクラウドデータがあります。\nOK：クラウドのデータをこの端末に反映\nキャンセル：この端末のデータを優先してクラウドへ保存（クラウド側は置き換わります）");
+          if(useCloud){lgApplyCloudRecord(record);return;}
+          await lgSaveCloud(false);
+        }
+        lgStatus("ログイン中："+lgUser.email+" ／ クラウド同期中");
+      }
+      lgStartCloudPolling();
+    }catch(e){lgStatus("ログインしましたがクラウド同期に失敗："+(e.message||e));}
   }
+
   const recoveryPanel=document.getElementById("recoveryPanel");
   function lgShowRecovery(){recoveryPanel.style.display="block";lgStatus("新しいパスワードを入力してください。");}
   document.getElementById("resetPasswordBtn").addEventListener("click",async()=>{
@@ -1960,18 +2043,14 @@ input,textarea,select{font-size:16px!important;}
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||password.length<6){lgStatus("メールを入力し、パスワードは6文字以上にしてください。");return;}
     try{const {data,error}=await lgSupabase.auth.signUp({email,password});if(error)throw error;
-      if(data.session){await lgAfterLogin();lgStatus("登録・ログイン完了。クラウド保存を開始できます。");}
-      else lgStatus("登録受付完了。確認メールのリンクを開いてからログインしてください。メールが届かない場合はSupabase側のメール確認設定を見直します。");
+      if(data.session){await lgAfterLogin();lgStatus("登録・ログイン完了。クラウド同期を開始しました。");}
+      else lgStatus("登録受付完了。確認メールのリンクを開いてからログインしてください。");
     }catch(e){lgStatus("新規登録できません："+(e.message||e));}
   });
-  document.getElementById("signOutBtn").addEventListener("click",async()=>{try{await lgSupabase.auth.signOut();lgUser=null;lgAccountUi();}catch(e){lgStatus("ログアウト失敗："+(e.message||e));}});
+  document.getElementById("signOutBtn").addEventListener("click",async()=>{try{await lgSupabase.auth.signOut();lgUser=null;lgLastCloudUpdatedAt=null;lgLocalDirty=false;if(lgPollTimer)clearInterval(lgPollTimer);lgPollTimer=null;lgAccountUi();}catch(e){lgStatus("ログアウト失敗："+(e.message||e));}});
   document.getElementById("cloudSaveBtn").addEventListener("click",async()=>{try{await lgSaveCloud(true);}catch(e){lgStatus("クラウド保存に失敗："+(e.message||e));}});
   document.getElementById("cloudLoadBtn").addEventListener("click",async()=>{try{await lgRestoreCloud();}catch(e){lgStatus("復元に失敗："+(e.message||e));}});
   if(lgSupabase){
-    // Single auth-state listener: keep the account UI updated and reveal the recovery form
-    // when Supabase emits PASSWORD_RECOVERY. Also detect recovery links on initial load.
-    // Recovery links may place their parameters in either the query string or hash.
-    // Check both, while still relying on Supabase's PASSWORD_RECOVERY event/session.
     const lgQueryParams = new URLSearchParams(location.search);
     const lgHashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
     const lgRecoveryType = lgQueryParams.get("type") || lgHashParams.get("type") || "";
@@ -1983,15 +2062,21 @@ input,textarea,select{font-size:16px!important;}
       lgUser=session?.user||null;
       lgAccountUi();
       if(event === "PASSWORD_RECOVERY") lgShowRecovery();
+      if(event === "SIGNED_OUT"){lgUser=null;if(lgPollTimer)clearInterval(lgPollTimer);lgPollTimer=null;}
     });
     lgAfterLogin();
-    // Allow the SDK to process the incoming recovery link first; show the form
-    // even if the event was missed, but only when recovery parameters are present.
     if(lgIsRecoveryLink) setTimeout(lgShowRecovery,1200);
   }
-  // Debounced automatic cloud backup whenever one of the app's three stores is updated.
-  const lgOriginalSetItem=localStorage.setItem.bind(localStorage);
-  localStorage.setItem=function(key,value){lgOriginalSetItem(key,value);if([KEY,TIMETABLE_KEY,TASK_DAY_KEY].includes(key)&&lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}};
+  // Debounced local -> cloud save, with dirty tracking for safe cross-device polling.
+  localStorage.setItem=function(key,value){
+    lgOriginalSetItem(key,value);
+    if([KEY,TIMETABLE_KEY,TASK_DAY_KEY].includes(key)){
+      lgLocalDirty=true;lgLocalChangeSeq++;
+      if(lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}
+    }
+  };
+  window.addEventListener("focus",()=>{if(lgUser)lgCheckForRemoteChanges().catch(()=>{});});
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&lgUser)lgCheckForRemoteChanges().catch(()=>{});});
 
   load();
   loadTaskDay();
