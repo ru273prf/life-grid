@@ -576,8 +576,24 @@ button,a{-webkit-user-select:none;user-select:none;}
   .timetable-cell{height:100%;min-height:0;padding:3px 2px;font-size:clamp(9px,2.6vw,11px);line-height:1.2;}
 }
 
+
+/* v45 UI polish: larger EVERY calendar, unmistakable selected date, unified plus circles */
+.every-calendar{flex:1 1 0!important;min-height:0!important;grid-auto-rows:minmax(0,1fr);}
+.every-details-wrap{flex:0 0 auto!important;min-height:38px!important;margin-top:4px!important;}
+.every-details-wrap:has(.every-details.open){flex:0 0 42%!important;min-height:0!important;}
+.every-cell.selected{background:#111!important;color:#fff!important;border:3px solid #fff!important;box-shadow:inset 0 0 0 2px #111,0 0 0 2px #111!important;font-weight:800!important;transform:scale(.96);z-index:1;}
+.every-cell.today:not(.selected){box-shadow:inset 0 0 0 2px #111!important;font-weight:800!important;}
+.every-plus,.round-add-button,.task-add-button{width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;flex:0 0 42px!important;border-radius:50%!important;font-size:27px!important;}
+@media(max-width:640px){
+ .every-calendar{flex:1 1 0!important;min-height:0!important;grid-template-rows:repeat(6,minmax(36px,1fr))!important;}
+ .every-cell{font-size:14px!important;border-radius:9px!important;}
+ .every-week span{font-size:11px!important;padding-bottom:4px!important;}
+ .every-details-wrap{flex-basis:38px!important;min-height:38px!important;}
+ .every-details-wrap:has(.every-details.open){flex-basis:40%!important;min-height:0!important;}
+ .every-plus,.round-add-button,.task-add-button{width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;flex-basis:42px!important;font-size:27px!important;}
+}
 </style>
-<!-- LIFE GRID v44: EVERY habit tracking, calendar and cloud sync integration -->
+<!-- LIFE GRID v45: larger calendar, selected-date clarity, unified add buttons -->
 </head>
 <body>
 <div class="wrap">
