@@ -1970,14 +1970,24 @@ input,textarea,select{font-size:16px!important;}
   if(lgSupabase){
     // Single auth-state listener: keep the account UI updated and reveal the recovery form
     // when Supabase emits PASSWORD_RECOVERY. Also detect recovery links on initial load.
-    const lgIsRecoveryLink = new URLSearchParams(location.hash.replace(/^#/ , "")).get("type") === "recovery";
+    // Recovery links may place their parameters in either the query string or hash.
+    // Check both, while still relying on Supabase's PASSWORD_RECOVERY event/session.
+    const lgQueryParams = new URLSearchParams(location.search);
+    const lgHashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const lgRecoveryType = lgQueryParams.get("type") || lgHashParams.get("type") || "";
+    const lgRecoveryTokenPresent = ["access_token", "refresh_token", "token", "token_hash", "code"]
+      .some(k => lgQueryParams.has(k) || lgHashParams.has(k));
+    const lgIsRecoveryLink = lgRecoveryType === "recovery" ||
+      (lgRecoveryTokenPresent && /recovery/i.test(location.href));
     lgSupabase.auth.onAuthStateChange((event,session)=>{
       lgUser=session?.user||null;
       lgAccountUi();
       if(event === "PASSWORD_RECOVERY") lgShowRecovery();
     });
     lgAfterLogin();
-    if(lgIsRecoveryLink) setTimeout(lgShowRecovery,700);
+    // Allow the SDK to process the incoming recovery link first; show the form
+    // even if the event was missed, but only when recovery parameters are present.
+    if(lgIsRecoveryLink) setTimeout(lgShowRecovery,1200);
   }
   // Debounced automatic cloud backup whenever one of the app's three stores is updated.
   const lgOriginalSetItem=localStorage.setItem.bind(localStorage);
