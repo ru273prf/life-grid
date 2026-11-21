@@ -262,6 +262,8 @@ input,textarea,select{font-size:16px!important;}
     <input id="accountPassword" type="password" autocomplete="current-password" placeholder="パスワード（6文字以上）">
     <button type="button" id="signInBtn">ログイン</button>
     <button type="button" class="light" id="signUpBtn">新規登録</button>
+    <button type="button" class="light" id="resetPasswordBtn">パスワードを忘れた</button>
+    <div id="recoveryPanel" style="display:none;flex-basis:100%;padding:10px;border:1px solid #ddd;border-radius:10px"><strong>新しいパスワード</strong><input id="newPassword" type="password" autocomplete="new-password" placeholder="新しいパスワード（6文字以上）" style="width:100%;margin:8px 0"><button type="button" id="updatePasswordBtn">パスワードを更新</button><button type="button" class="light" id="cancelRecoveryBtn">キャンセル</button></div>
     <button type="button" class="light" id="cloudSaveBtn">クラウド保存</button>
     <button type="button" class="light" id="cloudLoadBtn">クラウド復元</button>
     <button type="button" class="light" id="signOutBtn" style="display:none">ログアウト</button>
@@ -1933,6 +1935,21 @@ input,textarea,select{font-size:16px!important;}
       else lgStatus("ログイン中："+lgUser.email+" ／ 編集内容は自動クラウド保存されます");
     }}catch(e){lgStatus("ログインしましたがバックアップ確認に失敗："+(e.message||e));}}
   }
+  const recoveryPanel=document.getElementById("recoveryPanel");
+  function lgShowRecovery(){recoveryPanel.style.display="block";lgStatus("新しいパスワードを入力してください。");}
+  document.getElementById("resetPasswordBtn").addEventListener("click",async()=>{
+    const email=document.getElementById("accountEmail").value.trim();
+    if(!email){lgStatus("先にメールアドレスを入力してください。");return;}
+    try{const {error}=await lgSupabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;lgStatus("リセットメールを送信しました。メール内リンクを開いて、このページで新しいパスワードを設定してください。");}
+    catch(e){lgStatus("リセットメール送信に失敗："+(e.message||e));}
+  });
+  document.getElementById("updatePasswordBtn").addEventListener("click",async()=>{
+    const password=document.getElementById("newPassword").value;
+    if(password.length<6){lgStatus("新しいパスワードは6文字以上にしてください。");return;}
+    try{const {error}=await lgSupabase.auth.updateUser({password});if(error)throw error;recoveryPanel.style.display="none";document.getElementById("newPassword").value="";lgStatus("パスワードを更新しました。新しいパスワードでログインできます。");}
+    catch(e){lgStatus("更新に失敗："+(e.message||e));}
+  });
+  document.getElementById("cancelRecoveryBtn").addEventListener("click",()=>{recoveryPanel.style.display="none";});
   document.getElementById("signInBtn").addEventListener("click",async()=>{
     const email=document.getElementById("accountEmail").value.trim(), password=document.getElementById("accountPassword").value;
     if(!email||!password){lgStatus("メールとパスワードを入力してください。");return;}
@@ -1950,7 +1967,18 @@ input,textarea,select{font-size:16px!important;}
   document.getElementById("signOutBtn").addEventListener("click",async()=>{try{await lgSupabase.auth.signOut();lgUser=null;lgAccountUi();}catch(e){lgStatus("ログアウト失敗："+(e.message||e));}});
   document.getElementById("cloudSaveBtn").addEventListener("click",async()=>{try{await lgSaveCloud(true);}catch(e){lgStatus("クラウド保存に失敗："+(e.message||e));}});
   document.getElementById("cloudLoadBtn").addEventListener("click",async()=>{try{await lgRestoreCloud();}catch(e){lgStatus("復元に失敗："+(e.message||e));}});
-  if(lgSupabase){lgSupabase.auth.onAuthStateChange((_event,session)=>{lgUser=session?.user||null;lgAccountUi();}); lgAfterLogin();}
+  if(lgSupabase){
+    // Single auth-state listener: keep the account UI updated and reveal the recovery form
+    // when Supabase emits PASSWORD_RECOVERY. Also detect recovery links on initial load.
+    const lgIsRecoveryLink = new URLSearchParams(location.hash.replace(/^#/ , "")).get("type") === "recovery";
+    lgSupabase.auth.onAuthStateChange((event,session)=>{
+      lgUser=session?.user||null;
+      lgAccountUi();
+      if(event === "PASSWORD_RECOVERY") lgShowRecovery();
+    });
+    lgAfterLogin();
+    if(lgIsRecoveryLink) setTimeout(lgShowRecovery,700);
+  }
   // Debounced automatic cloud backup whenever one of the app's three stores is updated.
   const lgOriginalSetItem=localStorage.setItem.bind(localStorage);
   localStorage.setItem=function(key,value){lgOriginalSetItem(key,value);if([KEY,TIMETABLE_KEY,TASK_DAY_KEY].includes(key)&&lgUser){clearTimeout(lgSyncTimer);lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),1200);}};
