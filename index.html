@@ -254,6 +254,7 @@ input,textarea,select{font-size:16px!important;}
 @media(max-width:640px){.account-box{display:grid;grid-template-columns:1fr 1fr}.account-box input{grid-column:span 2}.account-box .account-status{grid-column:span 2}.account-box button{width:100%}}
 
 </style>
+<!-- LIFE GRID v37 mobile session/reload fix -->
 </head>
 <body>
 <div class="wrap">
@@ -1888,7 +1889,7 @@ input,textarea,select{font-size:16px!important;}
     e.target.value="";
   });
 
-  // v36: automatic account-based cloud backup and cross-device sync.
+  // v37: prevent mobile reload/sign-in loops while applying cloud updates; persist auth explicitly.
   // Compare actual store contents rather than client-device clocks; clock skew must not cause one device
   // to overwrite a newer cloud backup with stale local data. Unsaved local edits are allowed to finish saving.
   // Logging out first flushes pending changes, then clears this browser's app data.
@@ -1898,6 +1899,7 @@ input,textarea,select{font-size:16px!important;}
   const LG_LOCAL_UPDATED_KEY = "life-grid-local-updated-at-v1";
   const lgOriginalSetItem = localStorage.setItem.bind(localStorage);
   let lgSupabase = null, lgUser = null, lgSyncTimer = null, lgPollTimer = null;
+  let lgAuthReady = false;
   let lgLastCloudUpdatedAt = null, lgLocalDirty = false, lgLocalChangeSeq = 0;
   let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false, lgAfterLoginRunning = false;
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
@@ -1905,7 +1907,16 @@ input,textarea,select{font-size:16px!important;}
     if(!window.supabase || typeof window.supabase.createClient !== "function") {
       throw new Error("Supabaseライブラリを読み込めませんでした。通信環境またはCDNへの接続を確認してください。");
     }
-    lgSupabase = window.supabase.createClient(LG_SUPABASE_URL, LG_SUPABASE_ANON_KEY);
+    // Keep the Supabase session in this site's localStorage so page lifecycle changes
+    // on iOS/Safari do not unexpectedly return the user to the sign-in form.
+    lgSupabase = window.supabase.createClient(LG_SUPABASE_URL, LG_SUPABASE_ANON_KEY, {
+      auth: {
+        storage: window.localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
   } catch(err) {
     lgSupabase = null;
     lgStatus("Supabase初期化エラー：" + (err.message || err));
@@ -1928,10 +1939,20 @@ input,textarea,select{font-size:16px!important;}
     lgPollTimer=null;
   }
   function lgAccountUi(){
+    const signIn=document.getElementById("signInBtn");
+    const signUp=document.getElementById("signUpBtn");
+    const signOut=document.getElementById("signOutBtn");
+    if(!lgAuthReady){
+      signIn.style.display="none";
+      signUp.style.display="none";
+      signOut.style.display="none";
+      lgStatus("ログイン状態を確認中…");
+      return;
+    }
     const logged=!!lgUser;
-    document.getElementById("signInBtn").style.display=logged?"none":"";
-    document.getElementById("signUpBtn").style.display=logged?"none":"";
-    document.getElementById("signOutBtn").style.display=logged?"":"none";
+    signIn.style.display=logged?"none":"";
+    signUp.style.display=logged?"none":"";
+    signOut.style.display=logged?"":"none";
     if(logged) lgStatus("ログイン中："+lgUser.email+" ／ 自動同期中");
     else lgStatus("ログアウト中（端末の表示は初期状態です）");
   }
@@ -1959,9 +1980,26 @@ input,textarea,select{font-size:16px!important;}
     const appliedAt=record.updated_at || new Date().toISOString();
     lgWriteLocalUpdatedAt(appliedAt);
     lgLocalDirty=false;
+    lgSaveAgain=false;
     lgLastCloudUpdatedAt=appliedAt;
+
+    // Re-read the three stores and redraw the current view in place.
+    // A full location.reload() here caused iOS to briefly show the sign-in UI
+    // and could interrupt the user's current editing session.
+    const wasSheetView=document.getElementById("sheetView").classList.contains("active");
+    load();
+    loadTaskDay();
+    loadTimetable();
+    renderHome();
+    renderTaskDay();
+    renderTimetable();
+    if(wasSheetView && activeSheetId && data.sheets.some(sh=>sh.id===activeSheetId)){
+      renderSheet();
+    }else if(wasSheetView){
+      activeSheetId=null;
+      show("home");
+    }
     lgStatus("クラウドの最新データを反映しました。");
-    location.reload();
     return true;
   }
   async function lgSaveCloud(showMsg=false){
@@ -2044,6 +2082,7 @@ input,textarea,select{font-size:16px!important;}
     lgAfterLoginRunning=true;
     try {
       const {data:{session}}=await lgRequireSupabase().auth.getSession();
+      lgAuthReady=true;
       lgUser=session?.user||null;
       lgAccountUi();
       if(!lgUser){lgStopPolling();return;}
@@ -2135,11 +2174,13 @@ input,textarea,select{font-size:16px!important;}
     const lgIsRecoveryLink = lgRecoveryType === "recovery" ||
       (lgRecoveryTokenPresent && /recovery/i.test(location.href));
     lgRequireSupabase().auth.onAuthStateChange((event,session)=>{
+      lgAuthReady=true;
       lgUser=session?.user||null;
       lgAccountUi();
       if(event === "PASSWORD_RECOVERY") lgShowRecovery();
       if(event === "SIGNED_OUT"){lgUser=null;if(lgPollTimer)clearInterval(lgPollTimer);lgPollTimer=null;}
     });
+    lgAccountUi();
     lgAfterLogin();
     if(lgIsRecoveryLink) setTimeout(lgShowRecovery,1200);
   }
