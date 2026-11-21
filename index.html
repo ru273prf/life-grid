@@ -1063,7 +1063,7 @@ button,a{-webkit-user-select:none;user-select:none;}
     var pickerContainer=$("taskDifficultyPicker");
     pickerContainer.innerHTML="";
     taskEditorDifficulty=createDifficultyPicker(pickerContainer,task?task.priority:3,null);
-    $("taskTitleInput").focus();setTimeout(function(){$("taskTitleInput").focus();},50);
+    if(!id){$("taskTitleInput").focus();setTimeout(function(){$("taskTitleInput").focus();},50);}
   }
   function closeTaskEditor(){
     $("taskEditorBackdrop").classList.remove("open");
@@ -2107,28 +2107,45 @@ button,a{-webkit-user-select:none;user-select:none;}
   function everySaveHabit(){var name=$("everyHabitName").value.trim(),days=everyState.chosenDays.slice().sort((a,b)=>a-b);if(!name){alert("習慣名を入力してください。");return;}if(!days.length){alert("実施曜日を1日以上選択してください。");return;}var todayKey=everyKey(everyToday),lineage=everyState.editVersionId;if(lineage!==null){var old=everyCurrent(lineage);if(!old){alert("編集対象が見つかりません。");return;}old.to=everyKey(new Date(everyToday.getTime()-86400000));everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}else{lineage=everyState.nextId++;everyState.versions.push({id:everyState.nextId++,lineage:lineage,name:name,days:days,from:todayKey,to:null});}everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();}
   function everyDeleteHabit(){var id=everyState.editVersionId;if(id===null)return;if(!confirm("この習慣を今日以降の予定から削除しますか？過去の記録は保持されます。"))return;var old=everyCurrent(id);if(old)old.to=everyKey(new Date(everyToday.getTime()-86400000));everyCloseHabit();everySave();everyRenderToday();everyRenderCalendar();$("everyEditBackdrop").classList.add("open");everyRenderEditList();}
   function everyRenderEditList(){var list=$("everyEditList");list.innerHTML="";var ids=[...new Set(everyState.versions.map(v=>v.lineage))];ids.forEach(id=>{var v=everyCurrent(id);if(!v)return;var row=document.createElement("button");row.type="button";row.className="every-edit-row light";row.textContent=v.name;row.onclick=()=>{$("everyEditBackdrop").classList.remove("open");everyOpenHabit(id);};list.append(row);});if(!list.children.length){var e=document.createElement("div");e.className="every-empty";e.textContent="習慣がありません。＋から追加してください。";list.append(e);}}
-  function everyInit(){everyLoad();everyRenderToday();everyRenderCalendar();$("everyAddButton").onclick=()=>everyOpenHabit();$("everyEditButton").onclick=()=>{everyRenderEditList();$("everyEditBackdrop").classList.add("open");};$("everyHabitCancel").onclick=everyCloseHabit;$("everyHabitSave").onclick=everySaveHabit;$("everyHabitDelete").onclick=everyDeleteHabit;$("everyEditDone").onclick=()=>$("everyEditBackdrop").classList.remove("open");$("everyTodayTab").onclick=()=>everySetPage(false);$("everyCalendarTab").onclick=()=>everySetPage(true);$("everyPrev").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()-1,1);everyRenderCalendar();};$("everyNext").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()+1,1);everyRenderCalendar();};$("everyDetailsToggle").onclick=null;$("everyDetails").classList.add("open");var x0=0,view=$("everyViewport");view.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;},{passive:true});view.addEventListener("touchend",e=>{var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>55)everySetPage(dx<0);},{passive:true});view.addEventListener("mousedown",e=>x0=e.clientX);view.addEventListener("mouseup",e=>{var dx=e.clientX-x0;if(Math.abs(dx)>80)everySetPage(dx<0);});$("everyHabitName").addEventListener("keydown",e=>{if(e.key==="Enter")everySaveHabit();});$("everyHabitBackdrop").addEventListener("click",e=>{if(e.target===$("everyHabitBackdrop"))everyCloseHabit();});$("everyEditBackdrop").addEventListener("click",e=>{if(e.target===$("everyEditBackdrop"))$("everyEditBackdrop").classList.remove("open");});}
+  function everyInit(){everyLoad();everyRenderToday();everyRenderCalendar();$("everyAddButton").onclick=()=>everyOpenHabit();$("everyEditButton").onclick=()=>{everyRenderEditList();$("everyEditBackdrop").classList.add("open");};$("everyHabitCancel").onclick=everyCloseHabit;$("everyHabitSave").onclick=everySaveHabit;$("everyHabitDelete").onclick=everyDeleteHabit;$("everyEditDone").onclick=()=>$("everyEditBackdrop").classList.remove("open");$("everyTodayTab").onclick=()=>everySetPage(false);$("everyCalendarTab").onclick=()=>everySetPage(true);$("everyPrev").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()-1,1);everyRenderCalendar();};$("everyNext").onclick=()=>{everyState.month=new Date(everyState.month.getFullYear(),everyState.month.getMonth()+1,1);everyRenderCalendar();};$("everyDetailsToggle").onclick=null;$("everyDetails").classList.add("open");var view=$("everyViewport");$("everyHabitName").addEventListener("keydown",e=>{if(e.key==="Enter")everySaveHabit();});$("everyHabitBackdrop").addEventListener("click",e=>{if(e.target===$("everyHabitBackdrop"))everyCloseHabit();});$("everyEditBackdrop").addEventListener("click",e=>{if(e.target===$("everyEditBackdrop"))$("everyEditBackdrop").classList.remove("open");});}
   everyInit();
 
-  // v48: swipe between primary app pages (not the internal horizontal item/habit rails).
+  // v49 gesture router: internal panels/pages form one continuous horizontal sequence.
   (function(){
-    var pageOrder=["timetable","every","taskday","lifegrid"],startX=0,startY=0,tracking=false;
-    var swipeRoot=document.querySelector("main");
-    swipeRoot.addEventListener("touchstart",function(e){
+    var startX=0,startY=0,tracking=false,startTarget=null;
+    var root=document.querySelector("main");
+    function railFor(page){return page==="taskday"?$("taskActiveList"):page==="lifegrid"?$("goalGrid"):null;}
+    function atEdge(rail,dir){if(!rail)return true;var max=Math.max(0,rail.scrollWidth-rail.clientWidth);return dir<0?rail.scrollLeft>=max-3:rail.scrollLeft<=3;}
+    function routeSwipe(dx){
+      var dir=dx<0?-1:1;
+      if(currentAppPage==="every"){
+        var isCal=$("everyCalendarTab").classList.contains("active");
+        if(dir<0){if(!isCal)everySetPage(true);else setAppPage("taskday");}
+        else{if(isCal)everySetPage(false);else setAppPage("timetable");}
+        return;
+      }
+      if(currentAppPage==="taskday"){
+        var taskRail=$("taskActiveList");
+        if(atEdge(taskRail,dir)){setAppPage(dir<0?"lifegrid":"every");if(dir>0)everySetPage(true);}
+        return;
+      }
+      if(currentAppPage==="lifegrid"){
+        var goalRail=$("goalGrid");if(atEdge(goalRail,dir)&&dir>0)setAppPage("taskday");return;
+      }
+      if(currentAppPage==="timetable"&&dir<0)setAppPage("every");
+    }
+    root.addEventListener("touchstart",function(e){
       if(!e.touches||e.touches.length!==1)return;
-      var target=e.target;
-      if(target.closest(".task-page,.goal-page,.every-viewport,input,textarea,select,button,[contenteditable='true'],.modal-backdrop"))return;
-      startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
+      if(e.target.closest("input,textarea,select,[contenteditable='true'],.modal-backdrop"))return;
+      startTarget=e.target;startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
     },{passive:true});
-    swipeRoot.addEventListener("touchend",function(e){
+    root.addEventListener("touchend",function(e){
       if(!tracking||!e.changedTouches||!e.changedTouches.length)return;tracking=false;
       var dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
-      if(Math.abs(dx)<65||Math.abs(dx)<Math.abs(dy)*1.25)return;
-      var idx=pageOrder.indexOf(currentAppPage);if(idx<0)return;
-      var next=idx+(dx<0?1:-1);if(next<0||next>=pageOrder.length)return;
-      setAppPage(pageOrder[next]);
+      if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.2)return;
+      routeSwipe(dx);
     },{passive:true});
-    swipeRoot.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
+    root.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
   })();
 
   $("navLifeGrid").addEventListener("click",function(){setAppPage("lifegrid");});
