@@ -1894,7 +1894,8 @@ input,textarea,select{font-size:16px!important;}
   const LG_SUPABASE_ANON_KEY = "sb_publishable__Nkl15LlN2BIPkdqxFxHpw_LF3UqBV5";
   let lgSupabase = null, lgUser = null, lgSyncTimer = null, lgPollTimer = null;
   let lgLastCloudUpdatedAt = null, lgLocalDirty = false, lgLocalChangeSeq = 0;
-  let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false;
+  let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false, lgAfterLoginRunning = false;
+  const LG_APPLIED_MARKER_PREFIX = "life-grid-cloud-applied:";
   const lgOriginalSetItem = localStorage.setItem.bind(localStorage);
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
   try { if(window.supabase && window.supabase.createClient) lgSupabase=window.supabase.createClient(LG_SUPABASE_URL,LG_SUPABASE_ANON_KEY); }
@@ -1932,6 +1933,7 @@ input,textarea,select{font-size:16px!important;}
     lgLocalDirty=false;
     lgLastCloudUpdatedAt=record.updated_at || new Date().toISOString();
     lgStatus("別端末の最新データを受信しました。画面を更新します。");
+    try{if(lgUser)sessionStorage.setItem(LG_APPLIED_MARKER_PREFIX + lgUser.id,lgLastCloudUpdatedAt);}catch(_){ }
     location.reload();
     return true;
   }
@@ -1987,7 +1989,25 @@ input,textarea,select{font-size:16px!important;}
       }
     }finally{lgPolling=false;}
   }
+  // Compare data structurally, independent of object key order. A plain JSON.stringify
+  // comparison can report false conflicts even when the stores contain identical values.
+  function lgStableValue(value){
+    if(Array.isArray(value)) return value.map(lgStableValue);
+    if(value && typeof value === "object"){
+      const out={};
+      Object.keys(value).sort().forEach(key=>{out[key]=lgStableValue(value[key]);});
+      return out;
+    }
+    return value;
+  }
+  function lgSameStores(a,b){
+    try{return JSON.stringify(lgStableValue(a))===JSON.stringify(lgStableValue(b));}
+    catch(_){return false;}
+  }
   async function lgAfterLogin(){
+    if(lgAfterLoginRunning) return;
+    lgAfterLoginRunning=true;
+    try {
     const {data:{session}}=await lgSupabase.auth.getSession();
     lgUser=session?.user||null;
     lgAccountUi();
@@ -2006,16 +2026,29 @@ input,textarea,select{font-size:16px!important;}
           lgApplyCloudRecord(record);
           return;
         }
-        const same=JSON.stringify(local.stores)===JSON.stringify(record.data.stores);
-        if(!same){
-          const useCloud=confirm("このアカウントには別の端末のクラウドデータがあります。\nOK：クラウドのデータをこの端末に反映\nキャンセル：この端末のデータを優先してクラウドへ保存（クラウド側は置き換わります）");
-          if(useCloud){lgApplyCloudRecord(record);return;}
-          await lgSaveCloud(false);
+        const markerKey=LG_APPLIED_MARKER_PREFIX + lgUser.id;
+        let justAppliedAt=null;
+        try{justAppliedAt=sessionStorage.getItem(markerKey);}catch(_){ }
+        if(justAppliedAt && justAppliedAt === (record.updated_at||"")){
+          // We just applied this exact remote version and reloaded to render it.
+          // Consume the one-shot marker so the same confirmation cannot loop forever.
+          try{sessionStorage.removeItem(markerKey);}catch(_){ }
+          lgLastCloudUpdatedAt=record.updated_at||lgLastCloudUpdatedAt;
+        }else{
+          const same=lgSameStores(local.stores,record.data.stores);
+          if(!same){
+            const useCloud=confirm("このアカウントには別の端末のクラウドデータがあります。\nOK：クラウドのデータをこの端末に反映\nキャンセル：この端末のデータを優先してクラウドへ保存（クラウド側は置き換わります）");
+            if(useCloud){lgApplyCloudRecord(record);return;}
+            await lgSaveCloud(false);
+          }
         }
         lgStatus("ログイン中："+lgUser.email+" ／ クラウド同期中");
       }
       lgStartCloudPolling();
     }catch(e){lgStatus("ログインしましたがクラウド同期に失敗："+(e.message||e));}
+    } finally {
+      lgAfterLoginRunning=false;
+    }
   }
 
   const recoveryPanel=document.getElementById("recoveryPanel");
