@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
+<meta name="life-grid-version" content="40">
 <meta name="color-scheme" content="light">
 <title>LIFE GRID</title>
 <style>
@@ -317,8 +318,85 @@ input,textarea,select{font-size:16px!important;}
 }
 @media(prefers-reduced-motion:reduce){.quick-settings-panel{scroll-behavior:auto;}}
 
+
+
+/* v40: app-like mobile canvas, horizontal content rails, discreet sheet controls */
+.sheet-title-line{display:flex;align-items:center;gap:6px;min-width:0;}
+.sheet-title-line h1{min-width:0;margin:0;}
+.sheet-options-wrap{position:relative;flex:0 0 auto;}
+.sheet-options-toggle{width:34px;height:34px;min-width:34px;padding:0;border:1px solid #e6e6e6;border-radius:50%;background:#fff;color:#666;font-size:21px;line-height:1;}
+.sheet-options-menu{display:none;position:absolute;top:calc(100% + 5px);right:0;z-index:45;min-width:138px;padding:6px;background:#fff;border:1px solid #e7e7e7;border-radius:11px;box-shadow:0 8px 28px #0002;}
+.sheet-options-menu.open{display:grid;gap:4px;}
+.sheet-options-menu button{width:100%;min-height:38px;padding:8px 10px;text-align:left;font-size:12px;border-radius:7px;}
+.sheet-options-menu button:hover{opacity:1;background:#f5f5f5;}
+
+/* App UI copy selection is disabled; editable controls remain selectable. */
+body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default;}
+button,a{-webkit-user-select:none;user-select:none;}
+
+@media(max-width:640px){
+  html,body{width:100%;height:100%;min-height:0;overflow:hidden!important;overscroll-behavior:none;}
+  body{position:fixed;inset:0;min-height:0;touch-action:manipulation;}
+  .wrap{height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0 10px env(safe-area-inset-bottom);}
+  header{flex:0 0 auto;min-height:0;margin:0 -10px 6px;padding:max(5px,env(safe-area-inset-top)) 10px 5px;}
+  .page-switcher{flex:1 1 auto;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none;touch-action:pan-x;}
+  .page-switcher::-webkit-scrollbar{display:none;}
+  .page-tab{flex:0 0 auto;min-width:76px;padding:6px 9px;font-size:11px;}
+  main{flex:1 1 auto;min-height:0;overflow:hidden;position:relative;}
+  .view.active{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;}
+  #lifeGridApp.view.active{height:100%;min-height:0;overflow:hidden;}
+  #homeView.view.active,#sheetView.view.active{flex:1 1 auto;min-height:0;}
+  .eyebrow{flex:0 0 auto;margin:4px 0 7px;}
+  .page-title-row{flex:0 0 auto;}
+  .cards{display:flex;flex:1 1 auto;min-height:0;align-items:stretch;gap:9px;overflow-x:auto;overflow-y:hidden;padding:2px 1px 9px;scroll-snap-type:x proximity;touch-action:pan-x;}
+  .cards .card{flex:0 0 min(76vw,270px);min-height:0;max-height:100%;scroll-snap-align:start;}
+  .cards .add-sheet{flex-basis:132px;min-height:0;}
+  .homeEmpty{flex:0 0 auto;}
+  #homeEmpty{flex:0 0 auto;margin:4px 0 0;font-size:12px;}
+  .sheet-head{flex:0 0 auto;display:block;min-height:0;margin:0 0 8px;}
+  .sheet-title-line h1{font-size:clamp(20px,6vw,25px);line-height:1.15;}
+  .sheet-options-toggle{width:30px;height:30px;min-width:30px;font-size:19px;}
+  .sheet-filter-row{margin-top:7px;}
+  #sheetProgress{margin-top:7px;}
+  #goalGrid.grid{display:flex;flex:1 1 auto;min-height:0;align-items:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;padding:3px 1px 9px;scroll-snap-type:x proximity;touch-action:pan-x;}
+  #goalGrid .tile{flex:0 0 min(39vw,150px);min-height:0;height:100%;max-height:100%;scroll-snap-align:start;}
+  #goalGrid .tile.add{flex-basis:108px;}
+  #goalEmpty{flex:0 0 auto;margin:4px 0 0;font-size:12px;}
+  #taskDayView.view.active{gap:7px;}
+  .task-day-heading{flex:0 0 auto;margin:2px 0 0;}
+  .task-list{display:flex;flex:1 1 auto;min-height:0;flex-direction:row;align-items:stretch;gap:9px;overflow-x:auto;overflow-y:hidden;padding:2px 1px 8px;scroll-snap-type:x proximity;touch-action:pan-x;}
+  .task-item{flex:0 0 min(76vw,270px);width:min(76vw,270px);height:100%;min-height:0;max-height:100%;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:12px;padding:13px;border:1px solid #e8e8e8;border-radius:12px;background:#fff;scroll-snap-align:start;}
+  .task-main{flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:12px;}
+  .task-name-button{width:100%;min-height:0;display:block;font-size:15px;line-height:1.5;}
+  .task-deadline{margin-left:0;margin-top:auto;font-size:11px;}
+  .task-check{align-self:flex-end;}
+  .task-empty{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin:0;}
+  .task-completed-section{flex:0 0 auto;max-height:108px;overflow:hidden;margin:0;padding-top:2px;}
+  .completed-toggle{min-height:38px;padding:8px 2px;}
+  .task-completed-list{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:0 1px 7px;touch-action:pan-x;}
+  .task-completed-item{flex:0 0 min(68vw,230px);min-width:0;padding:7px;border:1px solid #eee;border-radius:9px;gap:7px;}
+  .task-completed-name{font-size:11px;}
+  .task-restore-button{padding:5px 7px;}
+  .task-add-button{bottom:max(14px,env(safe-area-inset-bottom));right:14px;width:50px;height:50px;}
+  #timetableView.view.active{min-height:0;}
+  .timetable-scroll{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:hidden;}
+  .timetable-grid{height:100%;grid-template-rows:32px repeat(6,minmax(0,1fr));min-height:0;}
+  .timetable-cell{min-height:0;height:100%;}
+  .modal-backdrop{position:fixed;inset:0 0 var(--lg-keyboard-height,0px) 0;display:none;align-items:flex-start;justify-content:center;overflow:hidden;padding:max(8px,env(safe-area-inset-top)) 10px 8px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{align-self:flex-start;width:100%;max-width:480px;max-height:calc(var(--lg-visible-height,100dvh) - max(8px,env(safe-area-inset-top)) - 12px);margin:0;border-radius:15px;padding:15px 14px 14px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
+  .modal h2{margin-bottom:12px;}
+  .modal label{margin:8px 0 5px;}
+  .modal input,.modal textarea,.modal select{min-height:42px;}
+  .modal textarea{min-height:76px;}
+  .modal-actions{position:static;bottom:auto;padding:8px 0 0;margin-top:12px;}
+  .modal-actions button{min-height:42px;}
+  .quick-settings-panel{overflow-x:hidden;overflow-y:auto;}
+}
+
 </style>
-<!-- LIFE GRID v39 mobile UX refinement -->
+<!-- LIFE GRID v40 mobile UX refinement -->
 </head>
 <body>
 <div class="wrap">
@@ -362,7 +440,16 @@ input,textarea,select{font-size:16px!important;}
       <button id="backButton" class="light back">← ホーム</button>
       <div class="sheet-head">
         <div>
-          <h1 id="sheetNameHeading"></h1>
+          <div class="sheet-title-line">
+            <h1 id="sheetNameHeading"></h1>
+            <div class="sheet-options-wrap">
+              <button type="button" id="sheetOptionsToggle" class="sheet-options-toggle" aria-label="シートの操作" aria-expanded="false">⋯</button>
+              <div id="sheetOptionsMenu" class="sheet-options-menu">
+                <button id="renameButton" class="light" type="button">名前を変更</button>
+                <button id="deleteButton" class="danger" type="button">削除</button>
+              </div>
+            </div>
+          </div>
           <div id="sheetSummary" class="muted"></div>
           <div class="sheet-filter-row">
             <label for="goalViewMode">表示</label>
@@ -372,10 +459,6 @@ input,textarea,select{font-size:16px!important;}
             </select>
           </div>
           <div class="bar" style="max-width:360px"><div id="sheetProgress" class="bar-fill"></div></div>
-        </div>
-        <div class="actions">
-          <button id="renameButton" class="light">名前変更</button>
-          <button id="deleteButton" class="danger">削除</button>
         </div>
       </div>
       <div id="goalGrid" class="grid"></div>
@@ -1801,7 +1884,22 @@ input,textarea,select{font-size:16px!important;}
     if(e.target===$("revertConfirmBackdrop"))closeRevertConfirmation();
   });
   $("modalBackdrop").addEventListener("click",function(e){if(e.target===$("modalBackdrop"))closeModal();});
+  function closeSheetOptionsMenu(){
+    $("sheetOptionsMenu").classList.remove("open");
+    $("sheetOptionsToggle").setAttribute("aria-expanded","false");
+  }
+  $("sheetOptionsToggle").addEventListener("click",function(event){
+    event.stopPropagation();
+    var menu=$("sheetOptionsMenu");
+    var opening=!menu.classList.contains("open");
+    menu.classList.toggle("open",opening);
+    $("sheetOptionsToggle").setAttribute("aria-expanded",String(opening));
+  });
+  document.addEventListener("click",function(event){
+    if(!event.target.closest || !event.target.closest(".sheet-options-wrap"))closeSheetOptionsMenu();
+  });
   $("renameButton").addEventListener("click",function(){
+    closeSheetOptionsMenu();
     var sheet=getActiveSheet();if(!sheet)return;
     openModal("シート名変更","シート名",sheet.name,"text",function(name){
       name=String(name||"").trim();
@@ -1813,7 +1911,7 @@ input,textarea,select{font-size:16px!important;}
       return false;
     });
   });
-  $("deleteButton").addEventListener("click",function(){showDeleteConfirmation(1);});
+  $("deleteButton").addEventListener("click",function(){closeSheetOptionsMenu();showDeleteConfirmation(1);});
   $("deleteCancelButton").addEventListener("click",closeDeleteConfirmation);
   $("deleteAcceptButton").addEventListener("click",acceptDeleteConfirmation);
   $("deleteConfirmBackdrop").addEventListener("click",function(e){
@@ -2303,8 +2401,14 @@ input,textarea,select{font-size:16px!important;}
     }
   };
   function lgUpdateVisualHeight(){
-    const height=window.visualViewport?window.visualViewport.height:window.innerHeight;
+    const vv=window.visualViewport;
+    const height=vv?vv.height:window.innerHeight;
+    const offsetTop=vv?vv.offsetTop:0;
+    const keyboardHeight=vv?Math.max(0,window.innerHeight-(height+offsetTop)):0;
     document.documentElement.style.setProperty("--lg-visual-height",Math.round(height)+"px");
+    document.documentElement.style.setProperty("--lg-visible-height",Math.round(height)+"px");
+    document.documentElement.style.setProperty("--lg-keyboard-height",Math.round(keyboardHeight)+"px");
+    document.body.classList.toggle("lg-keyboard-open",keyboardHeight>120);
   }
   lgUpdateVisualHeight();
   if(window.visualViewport){
@@ -2312,6 +2416,18 @@ input,textarea,select{font-size:16px!important;}
     window.visualViewport.addEventListener("scroll",lgUpdateVisualHeight);
   }
   window.addEventListener("resize",lgUpdateVisualHeight);
+  // Keep mobile dialogs anchored at the top when the software keyboard opens.
+  document.addEventListener("focusin",function(event){
+    const target=event.target;
+    if(!target || !target.matches || !target.matches("input,textarea,select"))return;
+    const backdrop=target.closest(".modal-backdrop");
+    if(backdrop){backdrop.classList.add("has-focused-control");lgUpdateVisualHeight();}
+  });
+  document.addEventListener("focusout",function(event){
+    const backdrop=event.target && event.target.closest ? event.target.closest(".modal-backdrop") : null;
+    if(backdrop && !backdrop.contains(document.activeElement))backdrop.classList.remove("has-focused-control");
+    setTimeout(lgUpdateVisualHeight,80);
+  });
   // Keep mobile taps from triggering browser double-tap zoom in older iOS versions.
   document.addEventListener("gesturestart",event=>event.preventDefault(),{passive:false});
   window.addEventListener("focus",()=>{if(lgUser)lgCheckForRemoteChanges().catch(()=>{});});
