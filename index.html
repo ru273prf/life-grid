@@ -1901,6 +1901,7 @@ input,textarea,select{font-size:16px!important;}
   let lgSupabase = null, lgUser = null, lgSyncTimer = null, lgPollTimer = null;
   let lgAuthReady = false;
   let lgLastCloudUpdatedAt = null, lgLocalDirty = false, lgLocalChangeSeq = 0;
+  let lgLastSyncedStoresJson = null;
   let lgSaveInFlight = false, lgSaveAgain = false, lgPolling = false, lgAfterLoginRunning = false;
   const lgStatus = (msg) => { const el=document.getElementById("accountStatus"); if(el) el.textContent=msg; };
   try {
@@ -1982,6 +1983,7 @@ input,textarea,select{font-size:16px!important;}
     lgLocalDirty=false;
     lgSaveAgain=false;
     lgLastCloudUpdatedAt=appliedAt;
+    lgLastSyncedStoresJson=lgStoresFingerprint(payload.stores);
 
     // Re-read the three stores and redraw the current view in place.
     // A full location.reload() here caused iOS to briefly show the sign-in UI
@@ -2014,6 +2016,9 @@ input,textarea,select{font-size:16px!important;}
       const {error}=await lgSupabase.from("life_grid_backups").upsert(row,{onConflict:"user_id"});
       if(error) throw error;
       lgLastCloudUpdatedAt=stamp;
+      // Remember exactly which local snapshot was accepted by the cloud.
+      // The polling side uses this baseline to avoid replacing newer local edits.
+      lgLastSyncedStoresJson=lgStoresFingerprint(payload.stores);
       if(saveSeq===lgLocalChangeSeq){
         lgLocalDirty=false;
         lgWriteLocalUpdatedAt(stamp);
@@ -2050,15 +2055,31 @@ input,textarea,select{font-size:16px!important;}
         return;
       }
       const localPayload=buildBackupPayload();
-      // Data comparison is authoritative. updated_at may come from different device clocks,
-      // so it is not safe to decide which copy wins by comparing local and cloud timestamps.
-      if(lgSameStores(localPayload.stores,record.data.stores)){
-        lgLastCloudUpdatedAt=record.updated_at||lgLastCloudUpdatedAt;
+      const localFingerprint=lgStoresFingerprint(localPayload.stores);
+      const cloudFingerprint=lgStoresFingerprint(record.data.stores);
+
+      // Compare both sides with the last snapshot known to be synchronized.
+      // If this device has changed since that snapshot, local wins and is uploaded;
+      // never pull an older cloud copy over a newer local edit.
+      if(lgLocalDirty || lgSaveInFlight) return;
+      if(lgLastSyncedStoresJson===null){
+        // Defensive baseline for an already-authenticated tab.
+        lgLastSyncedStoresJson=localFingerprint;
+      }
+      const localChanged=localFingerprint!==lgLastSyncedStoresJson;
+      const cloudChanged=cloudFingerprint!==lgLastSyncedStoresJson;
+      if(localChanged){
+        lgLocalDirty=true;
+        lgLocalChangeSeq++;
+        clearTimeout(lgSyncTimer);
+        lgSyncTimer=setTimeout(()=>lgSaveCloud(false).catch(e=>lgStatus("自動クラウド保存に失敗："+(e.message||e))),250);
         return;
       }
-      // Never replace edits that have not finished uploading. The debounced save will publish them.
-      if(lgLocalDirty||lgSaveInFlight)return;
-      lgApplyCloudRecord(record);
+      if(cloudChanged){
+        lgApplyCloudRecord(record);
+        return;
+      }
+      lgLastCloudUpdatedAt=record.updated_at||lgLastCloudUpdatedAt;
     }finally{lgPolling=false;}
   }
   // Stable structural comparison helper used by login and automatic sync.
@@ -2075,6 +2096,10 @@ input,textarea,select{font-size:16px!important;}
   function lgSameStores(a,b){
     try{return JSON.stringify(lgStableValue(a))===JSON.stringify(lgStableValue(b));}
     catch(_){return false;}
+  }
+  function lgStoresFingerprint(stores){
+    try{return JSON.stringify(lgStableValue(stores));}
+    catch(_){return "__unreadable__";}
   }
 
   async function lgAfterLogin(){
@@ -2098,14 +2123,15 @@ input,textarea,select{font-size:16px!important;}
           lgLastCloudUpdatedAt=record.updated_at||null;
           if(!lgSameStores(local.stores,record.data.stores)){
             if(lgLocalDirty){
-              // Changes made on this device during login are uploaded; otherwise cloud is authoritative.
+              // Pending local edits take priority and are uploaded.
               await lgSaveCloud(false);
             }else{
-              // Existing account data is restored on this device without a confirmation prompt.
+              // On login, restore the account's cloud snapshot to this device.
+              // Do not return here: polling must start after the first restore too.
               lgApplyCloudRecord(record);
-              return;
             }
           }else{
+            lgLastSyncedStoresJson=lgStoresFingerprint(local.stores);
             lgWriteLocalUpdatedAt(record.updated_at||new Date().toISOString());
             lgLocalDirty=false;
           }
@@ -2153,7 +2179,7 @@ input,textarea,select{font-size:16px!important;}
       clearTimeout(lgSyncTimer);
       if(lgLocalDirty) await lgSaveCloud(false);
       await lgRequireSupabase().auth.signOut();
-      lgUser=null;lgLastCloudUpdatedAt=null;lgLocalDirty=false;
+      lgUser=null;lgLastCloudUpdatedAt=null;lgLastSyncedStoresJson=null;lgLocalDirty=false;
       lgStopPolling();
       // Keep Supabase's own auth storage alone; clear only LIFE GRID's three app stores.
       localStorage.removeItem(KEY);
